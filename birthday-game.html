@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎂 יום הולדת שמח!</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&family=Fredoka+One&display=swap');
+
+  :root {
+    --bg: #0f0a1e;
+    --card: #1a1030;
+    --accent1: #ff6b9d;
+    --accent2: #ffd93d;
+    --accent3: #6bcfff;
+    --accent4: #a8ff78;
+    --text: #f0eaff;
+    --muted: #8b7fa8;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 20% 20%, rgba(255,107,157,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(107,207,255,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(168,255,120,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .confetti-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 999;
+    overflow: hidden;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -20px;
+    animation: confettiFall linear infinite;
+    border-radius: 2px;
+    opacity: 0;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  .screen {
+    display: none;
+    min-height: 100vh;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .screen.active { display: flex; }
+
+  /* ===== HOST LOBBY ===== */
+  .logo {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    background: linear-gradient(135deg, var(--accent1), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    margin-bottom: 8px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+
+  .subtitle {
+    color: var(--muted);
+    text-align: center;
+    font-size: 1rem;
+    margin-bottom: 30px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .room-code-display {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3.5rem;
+    letter-spacing: 12px;
+    color: var(--accent2);
+    text-align: center;
+    padding: 20px;
+    background: rgba(255,217,61,0.1);
+    border-radius: 12px;
+    border: 2px dashed rgba(255,217,61,0.4);
+    margin: 12px 0;
+  }
+
+  .label {
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .players-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .player-chip {
+    background: rgba(255,255,255,0.06);
+    border-radius: 40px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .player-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .btn {
+    width: 100%;
+    max-width: 400px;
+    padding: 16px;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.15);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn:hover::after { opacity: 1; }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent1), #c23b7b);
+    color: white;
+    box-shadow: 0 4px 20px rgba(255,107,157,0.4);
+  }
+
+  .btn-secondary {
+    background: linear-gradient(135deg, var(--accent3), #3a9fd4);
+    color: white;
+    box-shadow: 0 4px 20px rgba(107,207,255,0.3);
+  }
+
+  .btn-yellow {
+    background: linear-gradient(135deg, var(--accent2), #e5b800);
+    color: #0f0a1e;
+    box-shadow: 0 4px 20px rgba(255,217,61,0.4);
+  }
+
+  .btn-green {
+    background: linear-gradient(135deg, var(--accent4), #5bbf4a);
+    color: #0f0a1e;
+    box-shadow: 0 4px 20px rgba(168,255,120,0.4);
+  }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ===== INPUT ===== */
+  .input-field {
+    width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 1rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: right;
+    margin-bottom: 14px;
+  }
+
+  .input-field:focus { border-color: var(--accent3); }
+  .input-field::placeholder { color: var(--muted); }
+
+  /* ===== GAME ROUND ===== */
+  .round-badge {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .round-type-tag {
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  .question-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    font-size: clamp(1.1rem, 4vw, 1.4rem);
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .answers-grid {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .answer-btn {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'Heebo', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: right;
+    transition: all 0.2s;
+  }
+
+  .answer-btn:hover {
+    background: rgba(107,207,255,0.15);
+    border-color: var(--accent3);
+    transform: translateX(-4px);
+  }
+
+  .answer-btn.selected {
+    background: rgba(107,207,255,0.2);
+    border-color: var(--accent3);
+  }
+
+  .answer-btn.correct {
+    background: rgba(168,255,120,0.25);
+    border-color: var(--accent4);
+  }
+
+  .answer-btn.wrong {
+    background: rgba(255,80,80,0.2);
+    border-color: #ff5050;
+  }
+
+  /* ===== TIMER ===== */
+  .timer-ring {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 16px;
+  }
+
+  .timer-ring svg {
+    transform: rotate(-90deg);
+  }
+
+  .timer-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6rem;
+    color: var(--accent2);
+  }
+
+  /* ===== SCORES ===== */
+  .scores-list {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 12px 18px;
+    border: 1px solid rgba(255,255,255,0.07);
+    animation: slideIn 0.4s ease both;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .score-row:nth-child(1) { border-color: rgba(255,217,61,0.4); background: rgba(255,217,61,0.08); }
+  .score-row:nth-child(2) { border-color: rgba(192,192,192,0.3); }
+  .score-row:nth-child(3) { border-color: rgba(205,127,50,0.3); }
+
+  .score-rank { font-size: 1.3rem; margin-left: 12px; }
+  .score-name { font-weight: 700; flex: 1; }
+  .score-pts {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: var(--accent2);
+  }
+
+  /* ===== WAITING ===== */
+  .waiting-dots span {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent3);
+    margin: 0 4px;
+    animation: bounce 1.2s infinite;
+  }
+
+  .waiting-dots span:nth-child(2) { animation-delay: 0.2s; background: var(--accent1); }
+  .waiting-dots span:nth-child(3) { animation-delay: 0.4s; background: var(--accent2); }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-12px); }
+  }
+
+  .emoji-big {
+    font-size: 4rem;
+    text-align: center;
+    margin-bottom: 16px;
+    animation: wiggle 1s ease infinite;
+  }
+
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+
+  /* ===== MISC ===== */
+  .divider {
+    color: var(--muted);
+    text-align: center;
+    margin: 8px 0 16px;
+    font-size: 0.9rem;
+  }
+
+  .progress-bar-wrap {
+    width: 100%;
+    max-width: 400px;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent1), var(--accent2));
+    transition: width 0.4s ease;
+  }
+
+  .writing-input {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255,255,255,0.07);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 16px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 1rem;
+    color: var(--text);
+    resize: none;
+    min-height: 80px;
+    outline: none;
+    text-align: right;
+    transition: border-color 0.2s;
+    margin-bottom: 14px;
+  }
+
+  .writing-input:focus { border-color: var(--accent1); }
+
+  .reveal-card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    width: 100%;
+    max-width: 400px;
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .reveal-card:hover { border-color: var(--accent1); }
+  .reveal-card .answer-text { font-size: 1rem; font-weight: 500; margin-bottom: 4px; }
+  .reveal-card .author-text { font-size: 0.8rem; color: var(--muted); }
+
+  .two-col { grid-template-columns: 1fr 1fr; }
+
+  h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6rem;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  p.center { text-align: center; color: var(--muted); margin-bottom: 20px; font-size: 0.95rem; }
+
+  .section-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<!-- ===== SCREEN: HOME ===== -->
+<div class="screen active" id="screen-home">
+  <div class="logo">🎂 יום הולדת!</div>
+  <div class="subtitle">משחק משפחתי לכבוד יום הולדת</div>
+  <button class="btn btn-primary" onclick="showScreen('screen-create')">🎮 פתח חדר חדש (מנחה)</button>
+  <div class="divider">— או —</div>
+  <button class="btn btn-secondary" onclick="showScreen('screen-join')">📱 הצטרף לחדר</button>
+</div>
+
+<!-- ===== SCREEN: CREATE ROOM ===== -->
+<div class="screen" id="screen-create">
+  <div class="logo" style="font-size:2rem">🎉 הגדרת חדר</div>
+  <div class="card">
+    <div class="label">השם שלך (מנחה)</div>
+    <input class="input-field" id="host-name" placeholder="למשל: שרה" maxlength="15"/>
+    <div class="label">שם יום ההולדת</div>
+    <input class="input-field" id="birthday-name" placeholder="למשל: מיה" maxlength="15"/>
+    <button class="btn btn-primary" onclick="createRoom()">✨ צור חדר</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN: JOIN ROOM ===== -->
+<div class="screen" id="screen-join">
+  <div class="logo" style="font-size:2rem">📱 הצטרף</div>
+  <div class="card">
+    <div class="label">קוד החדר (4 ספרות)</div>
+    <input class="input-field" id="join-code" placeholder="1234" maxlength="4" style="text-align:center;font-size:2rem;letter-spacing:8px;font-family:'Fredoka One',cursive" oninput="this.value=this.value.replace(/\D/g,'')"/>
+    <div class="label">השם שלך</div>
+    <input class="input-field" id="join-name" placeholder="למשל: דוד" maxlength="15"/>
+    <button class="btn btn-secondary" onclick="joinRoom()">🚀 כניסה</button>
+  </div>
+  <button class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--muted);max-width:400px" onclick="showScreen('screen-home')">← חזרה</button>
+</div>
+
+<!-- ===== SCREEN: HOST LOBBY ===== -->
+<div class="screen" id="screen-host-lobby">
+  <div class="logo" style="font-size:2rem">🎊 ממתינים לשחקנים</div>
+  <div class="card">
+    <div class="label">שתפו את הקוד הזה!</div>
+    <div class="room-code-display" id="display-room-code">----</div>
+    <div class="label" style="margin-top:8px">שחקנים מחוברים: <span id="player-count">0</span></div>
+    <div class="players-list" id="host-players-list"></div>
+  </div>
+  <button class="btn btn-green" id="start-btn" onclick="startGame()" disabled>
+    🟢 התחל משחק (<span id="start-count">0</span>/2 שחקנים מינימום)
+  </button>
+</div>
+
+<!-- ===== SCREEN: PLAYER LOBBY ===== -->
+<div class="screen" id="screen-player-lobby">
+  <div class="emoji-big">🥳</div>
+  <h2>הצטרפת!</h2>
+  <p class="center" id="player-lobby-msg">ממתין שהמנחה יתחיל את המשחק...</p>
+  <div class="waiting-dots">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- ===== SCREEN: QUESTION (HOST SHOWS) ===== -->
+<div class="screen" id="screen-question-host">
+  <div class="round-badge" id="q-host-badge"></div>
+  <div class="round-type-tag" id="q-host-type-tag"></div>
+  <div class="timer-ring">
+    <svg width="70" height="70">
+      <circle cx="35" cy="35" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="5"/>
+      <circle id="timer-circle-host" cx="35" cy="35" r="30" fill="none" stroke="#ffd93d" stroke-width="5" 
+        stroke-dasharray="188.5" stroke-dashoffset="0" stroke-linecap="round"/>
+    </svg>
+    <div class="timer-number" id="timer-num-host">20</div>
+  </div>
+  <div class="question-box" id="q-host-text"></div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-host"></div></div>
+  <div class="section-label" id="answers-waiting-label">ממתין לתשובות...</div>
+  <div class="answers-grid" id="submitted-count-display"></div>
+  <button class="btn btn-yellow" id="next-round-btn" style="display:none;max-width:400px" onclick="nextRound()">הצג תוצאות ←</button>
+</div>
+
+<!-- ===== SCREEN: QUESTION (PLAYER ANSWERS) ===== -->
+<div class="screen" id="screen-question-player">
+  <div class="round-badge" id="q-player-badge"></div>
+  <div class="round-type-tag" id="q-player-type-tag"></div>
+  <div class="timer-ring">
+    <svg width="70" height="70">
+      <circle cx="35" cy="35" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="5"/>
+      <circle id="timer-circle-player" cx="35" cy="35" r="30" fill="none" stroke="#ffd93d" stroke-width="5" 
+        stroke-dasharray="188.5" stroke-dashoffset="0" stroke-linecap="round"/>
+    </svg>
+    <div class="timer-number" id="timer-num-player">20</div>
+  </div>
+  <div class="question-box" id="q-player-text"></div>
+  <div id="q-player-input-area"></div>
+  <div id="q-submitted-msg" style="display:none;text-align:center;color:var(--accent4);font-weight:700;font-size:1.1rem">
+    ✅ תשובה נשלחה! ממתין לשאר...
+  </div>
+</div>
+
+<!-- ===== SCREEN: REVEAL ===== -->
+<div class="screen" id="screen-reveal">
+  <h2 id="reveal-title">תוצאות הסיבוב</h2>
+  <p class="center" id="reveal-subtitle"></p>
+  <div id="reveal-cards"></div>
+  <button class="btn btn-primary" style="max-width:400px;margin-top:10px" id="reveal-next-btn" onclick="afterReveal()">המשך ←</button>
+</div>
+
+<!-- ===== SCREEN: LEADERBOARD ===== -->
+<div class="screen" id="screen-leaderboard">
+  <h2>🏆 טבלת ניקוד</h2>
+  <p class="center" id="leaderboard-subtitle"></p>
+  <div class="scores-list" id="scores-list"></div>
+  <button class="btn btn-primary" style="max-width:400px;margin-top:16px" id="leaderboard-next-btn" onclick="continueFromLeaderboard()">המשך ←</button>
+</div>
+
+<!-- ===== SCREEN: FINAL ===== -->
+<div class="screen" id="screen-final">
+  <div class="emoji-big" style="font-size:5rem;animation:none">🎂</div>
+  <h2 id="final-title">כל הכבוד!</h2>
+  <p class="center" id="final-msg"></p>
+  <div class="scores-list" id="final-scores"></div>
+  <button class="btn btn-yellow" style="max-width:400px;margin-top:20px" onclick="location.reload()">🔄 משחק חדש</button>
+</div>
+
+<script>
+// ============================================================
+//  PURE LOCAL MULTIPLAYER via localStorage + polling
+//  (Works on same WiFi when ALL players open same tab on different devices,
+//   or demo mode for single device)
+// ============================================================
+
+const EMOJIS = ['🦁','🐬','🦋','🐝','🦊','🐧','🌸','⭐','🍕','🎸','🌈','🦄','🐙','🍀','🎯','🦩'];
+const COLORS = ['#ff6b9d','#ffd93d','#6bcfff','#a8ff78','#ff9f7f','#b39ddb','#80deea','#f48fb1'];
+
+// Questions bank
+const QUESTIONS = [
+  // Trivia about birthday person
+  { type: 'trivia', tag: '🧠 שאלון משפחתי', question: 'מה הצבע האהוב של {{name}}?', options: ['כחול','ורוד','ירוק','סגול'], answer: null, points: 100 },
+  { type: 'trivia', tag: '🧠 שאלון משפחתי', question: 'כמה שנים {{name}} מכירה את חברתה הטובה ביותר?', options: ['פחות מ-5','5-8','8-12','יותר מ-12'], answer: null, points: 100 },
+  { type: 'trivia', tag: '🧠 שאלון משפחתי', question: 'מה {{name}} הכי אוהבת לאכול?', options: ['פיצה 🍕','גלידה 🍦','סושי 🍣','המבורגר 🍔'], answer: null, points: 100 },
+  
+  // "Who is most likely" 
+  { type: 'whois', tag: '🎭 מי הכי...', question: 'מי הכי סביר שיתעורר ב-5 בבוקר ביום חופשי?', options: null, answer: null, points: 150 },
+  { type: 'whois', tag: '🎭 מי הכי...', question: 'מי הכי סביר לשכוח יום הולדת של מישהו?', options: null, answer: null, points: 150 },
+  { type: 'whois', tag: '🎭 מי הכי...', question: 'מי הכי סביר שיהיה ראש ממשלה יום אחד?', options: null, answer: null, points: 150 },
+  { type: 'whois', tag: '🎭 מי הכי...', question: 'מי הכי סביר להישאר אחרון בחגיגה?', options: null, answer: null, points: 150 },
+
+  // Write your own answer
+  { type: 'write', tag: '✍️ ממלאים ריק', question: 'השנה הבאה, {{name}} תתפרסם בזכות ___', options: null, answer: null, points: 200 },
+  { type: 'write', tag: '✍️ ממלאים ריק', question: 'הדבר שכולם יזכרו מהחגיגה של {{name}} הוא ___', options: null, answer: null, points: 200 },
+];
+
+// ---- GAME STATE ----
+let state = {
+  roomCode: null,
+  isHost: false,
+  myName: '',
+  myColor: '',
+  myEmoji: '',
+  birthdayName: '',
+  players: [],
+  scores: {},
+  currentRound: 0,
+  totalRounds: 6,
+  currentQuestion: null,
+  myAnswer: null,
+  answers: {},        // {playerName: answer}
+  usedQuestions: [],
+  timerInterval: null,
+  timeLeft: 20,
+  phase: 'lobby',    // lobby / question / reveal / leaderboard / final
+};
+
+// Shared "db" via localStorage with room code prefix
+function roomKey(k) { return `bdgame_${state.roomCode}_${k}`; }
+
+function dbSet(k, v) { localStorage.setItem(roomKey(k), JSON.stringify(v)); }
+function dbGet(k) {
+  const raw = localStorage.getItem(roomKey(k));
+  try { return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+
+// ---- POLLING ----
+let pollTimer = null;
+function startPolling(fn, interval = 700) {
+  stopPolling();
+  pollTimer = setInterval(fn, interval);
+}
+function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+// ---- SCREENS ----
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ---- ROOM CREATION ----
+function createRoom() {
+  const hostName = document.getElementById('host-name').value.trim();
+  const birthdayName = document.getElementById('birthday-name').value.trim();
+  if (!hostName || !birthdayName) { alert('אנא מלא שם ושם יום ההולדת'); return; }
+
+  const code = String(Math.floor(1000 + Math.random() * 9000));
+  state.roomCode = code;
+  state.isHost = true;
+  state.myName = hostName;
+  state.birthdayName = birthdayName;
+  state.myColor = COLORS[0];
+  state.myEmoji = EMOJIS[0];
+
+  const myPlayer = { name: hostName, color: COLORS[0], emoji: EMOJIS[0], isHost: true };
+  
+  dbSet('meta', { birthdayName, phase: 'lobby', currentRound: 0, totalRounds: state.totalRounds });
+  dbSet('players', [myPlayer]);
+  dbSet('scores', {});
+  dbSet('answers', {});
+  dbSet('question', null);
+  dbSet('hostAction', null);
+
+  document.getElementById('display-room-code').textContent = code;
+  showScreen('screen-host-lobby');
+  renderHostPlayers([myPlayer]);
+  updateStartBtn([myPlayer]);
+  startPolling(hostLobbyPoll);
+}
+
+function hostLobbyPoll() {
+  const players = dbGet('players') || [];
+  renderHostPlayers(players);
+  updateStartBtn(players);
+
+  const action = dbGet('hostAction');
+  if (action === 'start') {
+    // already started
+  }
+}
+
+function renderHostPlayers(players) {
+  document.getElementById('player-count').textContent = players.length;
+  document.getElementById('start-count').textContent = players.length;
+  const list = document.getElementById('host-players-list');
+  list.innerHTML = '';
+  players.forEach(p => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip';
+    chip.innerHTML = `<div class="player-avatar" style="background:${p.color}20;border:2px solid ${p.color}">${p.emoji}</div><span>${p.name}</span>`;
+    list.appendChild(chip);
+  });
+}
+
+function updateStartBtn(players) {
+  const btn = document.getElementById('start-btn');
+  btn.disabled = players.length < 2;
+  document.getElementById('start-count').textContent = players.length;
+}
+
+// ---- JOIN ROOM ----
+function joinRoom() {
+  const code = document.getElementById('join-code').value.trim();
+  const name = document.getElementById('join-name').value.trim();
+  if (!code || code.length !== 4 || !name) { alert('אנא הכנס קוד חדר תקין ושם'); return; }
+
+  // Check room exists
+  const meta = (() => {
+    const raw = localStorage.getItem(`bdgame_${code}_meta`);
+    try { return raw ? JSON.parse(raw) : null; } catch { return null; }
+  })();
+
+  if (!meta) { alert('חדר לא נמצא! בדוק את הקוד ונסה שוב.'); return; }
+
+  state.roomCode = code;
+  state.isHost = false;
+  state.myName = name;
+  state.birthdayName = meta.birthdayName;
+
+  // Assign color & emoji
+  const existingPlayers = (() => { const raw = localStorage.getItem(`bdgame_${code}_players`); try { return JSON.parse(raw) || []; } catch { return []; } })();
+  const idx = existingPlayers.length;
+  state.myColor = COLORS[idx % COLORS.length];
+  state.myEmoji = EMOJIS[idx % EMOJIS.length];
+
+  const me = { name, color: state.myColor, emoji: state.myEmoji, isHost: false };
+  existingPlayers.push(me);
+  localStorage.setItem(`bdgame_${code}_players`, JSON.stringify(existingPlayers));
+
+  document.getElementById('player-lobby-msg').textContent = `ממתינים שהמנחה יתחיל... שמך: ${name}`;
+  showScreen('screen-player-lobby');
+  startPolling(playerLobbyPoll);
+}
+
+// ---- START GAME ----
+function startGame() {
+  stopPolling();
+  const players = dbGet('players') || [];
+  const scores = {};
+  players.forEach(p => { scores[p.name] = 0; });
+  dbSet('scores', scores);
+  state.players = players;
+  state.scores = scores;
+  state.currentRound = 0;
+  state.usedQuestions = [];
+  dbSet('meta', { birthdayName: state.birthdayName, phase: 'question', currentRound: 0, totalRounds: state.totalRounds });
+  showNextQuestion();
+}
+
+function playerLobbyPoll() {
+  const meta = dbGet('meta');
+  if (!meta) return;
+  if (meta.phase === 'question') {
+    stopPolling();
+    state.birthdayName = meta.birthdayName;
+    state.players = dbGet('players') || [];
+    state.scores = dbGet('scores') || {};
+    state.currentRound = meta.currentRound;
+    loadCurrentQuestion();
+  }
+}
+
+// ---- QUESTIONS ----
+function pickQuestion() {
+  const available = QUESTIONS.filter((_, i) => !state.usedQuestions.includes(i));
+  if (available.length === 0) return null;
+  const candidates = available.slice(0, Math.min(available.length, 5));
+  const q = candidates[Math.floor(Math.random() * candidates.length)];
+  const idx = QUESTIONS.indexOf(q);
+  state.usedQuestions.push(idx);
+  return { ...q, question: q.question.replace(/{{name}}/g, state.birthdayName) };
+}
+
+function showNextQuestion() {
+  state.currentRound++;
+  if (state.currentRound > state.totalRounds) {
+    endGame();
+    return;
+  }
+
+  const q = pickQuestion();
+  state.currentQuestion = q;
+  state.answers = {};
+  state.myAnswer = null;
+
+  dbSet('question', { ...q, round: state.currentRound });
+  dbSet('answers', {});
+  dbSet('meta', { birthdayName: state.birthdayName, phase: 'question', currentRound: state.currentRound, totalRounds: state.totalRounds });
+
+  renderHostQuestion(q);
+  startPolling(hostQuestionPoll);
+}
+
+function loadCurrentQuestion() {
+  const q = dbGet('question');
+  if (!q) return;
+  state.currentQuestion = q;
+  state.currentRound = q.round;
+  renderPlayerQuestion(q);
+  startPolling(playerQuestionPoll);
+}
+
+// ---- RENDER HOST QUESTION ----
+function renderHostQuestion(q) {
+  showScreen('screen-question-host');
+  document.getElementById('q-host-badge').textContent = `סיבוב ${state.currentRound} מתוך ${state.totalRounds}`;
+  const tag = document.getElementById('q-host-type-tag');
+  tag.textContent = q.tag;
+  tag.style.cssText = getTagStyle(q.type);
+  document.getElementById('q-host-text').textContent = q.question;
+  document.getElementById('next-round-btn').style.display = 'none';
+  document.getElementById('submitted-count-display').innerHTML = '';
+  document.getElementById('answers-waiting-label').textContent = 'ממתין לתשובות...';
+  
+  const players = dbGet('players') || [];
+  const prog = document.getElementById('progress-host');
+  prog.style.width = ((state.currentRound - 1) / state.totalRounds * 100) + '%';
+
+  startTimer(20, 'host', () => {
+    document.getElementById('next-round-btn').style.display = 'flex';
+  });
+}
+
+function hostQuestionPoll() {
+  const answers = dbGet('answers') || {};
+  const players = dbGet('players') || [];
+  const count = Object.keys(answers).length;
+  const nonHostPlayers = players.filter(p => !p.isHost);
+  document.getElementById('answers-waiting-label').textContent = 
+    `${count} / ${nonHostPlayers.length} שחקנים ענו`;
+  if (count >= nonHostPlayers.length && nonHostPlayers.length > 0) {
+    document.getElementById('next-round-btn').style.display = 'flex';
+    stopTimer();
+  }
+}
+
+// ---- RENDER PLAYER QUESTION ----
+function renderPlayerQuestion(q) {
+  showScreen('screen-question-player');
+  document.getElementById('q-player-badge').textContent = `סיבוב ${state.currentRound} מתוך ${state.totalRounds}`;
+  const tag = document.getElementById('q-player-type-tag');
+  tag.textContent = q.tag;
+  tag.style.cssText = getTagStyle(q.type);
+  document.getElementById('q-player-text').textContent = q.question;
+  document.getElementById('q-submitted-msg').style.display = 'none';
+
+  const inputArea = document.getElementById('q-player-input-area');
+  inputArea.innerHTML = '';
+  state.myAnswer = null;
+
+  const players = dbGet('players') || [];
+  const prog = document.createElement('div');
+  prog.className = 'progress-bar-wrap';
+  prog.style.cssText = 'width:100%;max-width:400px';
+  prog.innerHTML = `<div class="progress-bar-fill" style="width:${((state.currentRound - 1) / state.totalRounds * 100)}%"></div>`;
+  inputArea.appendChild(prog);
+
+  if (q.type === 'trivia') {
+    const grid = document.createElement('div');
+    grid.className = 'answers-grid';
+    q.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = opt;
+      btn.onclick = () => submitAnswer(opt, grid);
+      grid.appendChild(btn);
+    });
+    inputArea.appendChild(grid);
+  } else if (q.type === 'whois') {
+    const grid = document.createElement('div');
+    grid.className = 'answers-grid';
+    players.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.innerHTML = `${p.emoji} ${p.name}`;
+      btn.onclick = () => submitAnswer(p.name, grid);
+      grid.appendChild(btn);
+    });
+    inputArea.appendChild(grid);
+  } else if (q.type === 'write') {
+    const ta = document.createElement('textarea');
+    ta.className = 'writing-input';
+    ta.placeholder = 'כתב/י את תשובתך הכי מצחיקה...';
+    ta.maxLength = 80;
+    inputArea.appendChild(ta);
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'btn btn-primary';
+    submitBtn.style.maxWidth = '400px';
+    submitBtn.textContent = '📨 שלח תשובה';
+    submitBtn.onclick = () => {
+      if (ta.value.trim()) submitWriteAnswer(ta.value.trim());
+    };
+    inputArea.appendChild(submitBtn);
+  }
+
+  startTimer(20, 'player', () => {
+    if (!state.myAnswer) submitAnswer('...לא ענה/תה 😅', null);
+  });
+}
+
+function submitAnswer(answer, grid) {
+  if (state.myAnswer) return;
+  state.myAnswer = answer;
+
+  if (grid) {
+    grid.querySelectorAll('.answer-btn').forEach(b => {
+      b.disabled = true;
+      if (b.textContent.includes(answer) || b.innerHTML.includes(answer)) b.classList.add('selected');
+    });
+  }
+
+  const answers = dbGet('answers') || {};
+  answers[state.myName] = answer;
+  dbSet('answers', answers);
+
+  document.getElementById('q-submitted-msg').style.display = 'block';
+  stopTimer();
+}
+
+function submitWriteAnswer(answer) {
+  submitAnswer(answer, null);
+  document.getElementById('q-player-input-area').innerHTML = '';
+}
+
+function playerQuestionPoll() {
+  const meta = dbGet('meta');
+  if (!meta) return;
+  if (meta.phase === 'reveal' && meta.currentRound === state.currentRound) {
+    stopPolling();
+    showRevealScreen();
+  } else if (meta.phase === 'leaderboard') {
+    stopPolling();
+    showLeaderboardScreen(false);
+  } else if (meta.phase === 'final') {
+    stopPolling();
+    showFinalScreen();
+  }
+}
+
+// ---- NEXT ROUND (HOST) ----
+function nextRound() {
+  stopPolling();
+  stopTimer();
+  // Score the round
+  const answers = dbGet('answers') || {};
+  const q = state.currentQuestion;
+  const players = dbGet('players') || [];
+  const scores = dbGet('scores') || {};
+
+  if (q.type === 'trivia' && q.answer) {
+    Object.entries(answers).forEach(([name, ans]) => {
+      if (ans === q.answer) scores[name] = (scores[name] || 0) + q.points;
+    });
+  } else if (q.type === 'whois') {
+    // Majority vote wins points
+    const voteCounts = {};
+    Object.values(answers).forEach(v => { voteCounts[v] = (voteCounts[v] || 0) + 1; });
+    const maxVotes = Math.max(...Object.values(voteCounts));
+    if (maxVotes > 1) {
+      const winners = Object.keys(voteCounts).filter(k => voteCounts[k] === maxVotes);
+      winners.forEach(w => { scores[w] = (scores[w] || 0) + q.points; });
+    }
+  } else if (q.type === 'write') {
+    // Everyone gets participation points
+    Object.keys(answers).forEach(name => {
+      if (answers[name] && answers[name] !== '...לא ענה/תה 😅') {
+        scores[name] = (scores[name] || 0) + 50;
+      }
+    });
+  }
+
+  dbSet('scores', scores);
+  state.scores = scores;
+  dbSet('meta', { birthdayName: state.birthdayName, phase: 'reveal', currentRound: state.currentRound, totalRounds: state.totalRounds });
+  showRevealScreen();
+}
+
+// ---- REVEAL SCREEN ----
+function showRevealScreen() {
+  showScreen('screen-reveal');
+  const q = dbGet('question') || state.currentQuestion;
+  const answers = dbGet('answers') || {};
+  const players = dbGet('players') || [];
+
+  document.getElementById('reveal-title').textContent = 'התשובות! 👀';
+  document.getElementById('reveal-subtitle').textContent = q.question;
+
+  const revealBtn = document.getElementById('reveal-next-btn');
+  revealBtn.style.display = state.isHost ? 'flex' : 'none';
+
+  const container = document.getElementById('reveal-cards');
+  container.innerHTML = '';
+
+  if (q.type === 'whois') {
+    // Show vote counts
+    const voteCounts = {};
+    players.forEach(p => { voteCounts[p.name] = 0; });
+    Object.values(answers).forEach(v => { voteCounts[v] = (voteCounts[v] || 0) + 1; });
+    const sorted = Object.entries(voteCounts).sort((a, b) => b[1] - a[1]);
+    sorted.forEach(([name, count], i) => {
+      const p = players.find(p => p.name === name);
+      const card = document.createElement('div');
+      card.className = 'reveal-card';
+      card.style.animationDelay = `${i * 0.1}s`;
+      card.innerHTML = `
+        <div class="answer-text">${p ? p.emoji : '👤'} ${name}</div>
+        <div class="author-text">${count} קולות ${'⭐'.repeat(Math.min(count, 5))}</div>
+      `;
+      container.appendChild(card);
+    });
+  } else if (q.type === 'trivia') {
+    Object.entries(answers).forEach(([name, ans], i) => {
+      const p = players.find(p => p.name === name);
+      const card = document.createElement('div');
+      card.className = 'reveal-card';
+      card.style.animationDelay = `${i * 0.1}s`;
+      card.innerHTML = `
+        <div class="answer-text">${ans}</div>
+        <div class="author-text">${p ? p.emoji : '👤'} ${name}</div>
+      `;
+      container.appendChild(card);
+    });
+  } else if (q.type === 'write') {
+    Object.entries(answers).forEach(([name, ans], i) => {
+      const p = players.find(p => p.name === name);
+      const card = document.createElement('div');
+      card.className = 'reveal-card';
+      card.style.animationDelay = `${i * 0.1}s`;
+      card.innerHTML = `
+        <div class="answer-text">"${ans}"</div>
+        <div class="author-text">${p ? p.emoji : '👤'} ${name}</div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  if (!state.isHost) {
+    startPolling(() => {
+      const meta = dbGet('meta');
+      if (meta && meta.phase === 'leaderboard') { stopPolling(); showLeaderboardScreen(false); }
+      if (meta && meta.phase === 'question' && meta.currentRound > state.currentRound) {
+        stopPolling();
+        state.currentRound = meta.currentRound;
+        loadCurrentQuestion();
+      }
+      if (meta && meta.phase === 'final') { stopPolling(); showFinalScreen(); }
+    });
+  }
+}
+
+function afterReveal() {
+  // Show leaderboard between rounds
+  dbSet('meta', { birthdayName: state.birthdayName, phase: 'leaderboard', currentRound: state.currentRound, totalRounds: state.totalRounds });
+  showLeaderboardScreen(true);
+}
+
+// ---- LEADERBOARD ----
+function showLeaderboardScreen(isHost) {
+  showScreen('screen-leaderboard');
+  const scores = dbGet('scores') || state.scores;
+  const players = dbGet('players') || [];
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const isLast = state.currentRound >= state.totalRounds;
+
+  document.getElementById('leaderboard-subtitle').textContent = 
+    isLast ? 'תוצאות סופיות!' : `אחרי סיבוב ${state.currentRound} מתוך ${state.totalRounds}`;
+
+  const ranks = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
+  const list = document.getElementById('scores-list');
+  list.innerHTML = '';
+  sorted.forEach(([name, pts], i) => {
+    const p = players.find(p => p.name === name);
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    row.style.animationDelay = `${i * 0.1}s`;
+    row.innerHTML = `
+      <span class="score-rank">${ranks[i] || '•'}</span>
+      <span style="font-size:1.2rem;margin-left:8px">${p ? p.emoji : '👤'}</span>
+      <span class="score-name">${name}</span>
+      <span class="score-pts">${pts} נק'</span>
+    `;
+    list.appendChild(row);
+  });
+
+  const nextBtn = document.getElementById('leaderboard-next-btn');
+  nextBtn.style.display = isHost || state.isHost ? 'flex' : 'none';
+  nextBtn.textContent = isLast ? '🎉 ראה תוצאות סופיות' : 'סיבוב הבא! →';
+
+  if (!state.isHost) {
+    startPolling(() => {
+      const meta = dbGet('meta');
+      if (meta && meta.phase === 'question' && meta.currentRound > state.currentRound) {
+        stopPolling();
+        state.currentRound = meta.currentRound;
+        loadCurrentQuestion();
+      }
+      if (meta && meta.phase === 'final') { stopPolling(); showFinalScreen(); }
+    });
+  }
+}
+
+function continueFromLeaderboard() {
+  stopPolling();
+  if (state.currentRound >= state.totalRounds) {
+    endGame();
+  } else {
+    showNextQuestion();
+  }
+}
+
+// ---- END GAME ----
+function endGame() {
+  dbSet('meta', { birthdayName: state.birthdayName, phase: 'final', currentRound: state.currentRound, totalRounds: state.totalRounds });
+  showFinalScreen();
+  launchConfetti();
+}
+
+function showFinalScreen() {
+  showScreen('screen-final');
+  const scores = dbGet('scores') || state.scores;
+  const players = dbGet('players') || [];
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const winner = sorted[0];
+
+  document.getElementById('final-title').textContent = `🎉 ${winner ? winner[0] : 'כל אחד'} ניצח!`;
+  document.getElementById('final-msg').textContent = 
+    `יום הולדת שמח ${state.birthdayName || ''}! 🎂 תודה ששיחקתם ביחד!`;
+
+  const ranks = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
+  const list = document.getElementById('final-scores');
+  list.innerHTML = '';
+  sorted.forEach(([name, pts], i) => {
+    const p = players.find(p => p.name === name);
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    row.style.animationDelay = `${i * 0.12}s`;
+    row.innerHTML = `
+      <span class="score-rank">${ranks[i] || '•'}</span>
+      <span style="font-size:1.2rem;margin-left:8px">${p ? p.emoji : '👤'}</span>
+      <span class="score-name">${name}</span>
+      <span class="score-pts">${pts} נק'</span>
+    `;
+    list.appendChild(row);
+  });
+
+  launchConfetti();
+}
+
+// ---- TIMER ----
+function startTimer(seconds, side, onEnd) {
+  state.timeLeft = seconds;
+  const numEl = document.getElementById(`timer-num-${side}`);
+  const circleEl = document.getElementById(`timer-circle-${side}`);
+  const circumference = 188.5;
+
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    if (numEl) numEl.textContent = state.timeLeft;
+    if (circleEl) {
+      const offset = circumference * (1 - state.timeLeft / seconds);
+      circleEl.style.strokeDashoffset = offset;
+      if (state.timeLeft <= 5) circleEl.style.stroke = '#ff6b9d';
+    }
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      if (onEnd) onEnd();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+
+// ---- CONFETTI ----
+function launchConfetti() {
+  const container = document.getElementById('confettiContainer');
+  container.innerHTML = '';
+  const colors = ['#ff6b9d','#ffd93d','#6bcfff','#a8ff78','#ff9f7f','#b39ddb'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.cssText = `
+      left: ${Math.random() * 100}%;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      width: ${6 + Math.random() * 8}px;
+      height: ${6 + Math.random() * 8}px;
+      animation-duration: ${2 + Math.random() * 3}s;
+      animation-delay: ${Math.random() * 2}s;
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+    `;
+    container.appendChild(piece);
+  }
+  setTimeout(() => { container.innerHTML = ''; }, 6000);
+}
+
+// ---- HELPERS ----
+function getTagStyle(type) {
+  const styles = {
+    trivia: 'background:rgba(107,207,255,0.2);color:#6bcfff;',
+    whois: 'background:rgba(255,107,157,0.2);color:#ff6b9d;',
+    write: 'background:rgba(168,255,120,0.2);color:#a8ff78;',
+  };
+  return styles[type] || '';
+}
+</script>
+</body>
+</html>
