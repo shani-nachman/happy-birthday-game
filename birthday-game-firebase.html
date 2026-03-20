@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎂 יום הולדת שמח!</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&family=Fredoka+One&display=swap');
+
+  :root {
+    --bg: #0f0a1e;
+    --card: #1a1030;
+    --accent1: #ff6b9d;
+    --accent2: #ffd93d;
+    --accent3: #6bcfff;
+    --accent4: #a8ff78;
+    --text: #f0eaff;
+    --muted: #8b7fa8;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 20% 20%, rgba(255,107,157,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(107,207,255,0.15) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .confetti-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 999;
+    overflow: hidden;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    top: -20px;
+    animation: confettiFall linear infinite;
+    opacity: 0;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  .screen {
+    display: none;
+    min-height: 100vh;
+    padding: 24px 20px;
+    position: relative;
+    z-index: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .screen.active { display: flex; }
+
+  .logo {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2.2rem, 8vw, 3.5rem);
+    background: linear-gradient(135deg, var(--accent1), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    margin-bottom: 6px;
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+
+  .subtitle { color: var(--muted); text-align: center; font-size: 0.95rem; margin-bottom: 28px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    padding: 22px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .room-code-display {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3.2rem;
+    letter-spacing: 12px;
+    color: var(--accent2);
+    text-align: center;
+    padding: 18px;
+    background: rgba(255,217,61,0.1);
+    border-radius: 12px;
+    border: 2px dashed rgba(255,217,61,0.4);
+    margin: 10px 0;
+  }
+
+  .label { color: var(--muted); font-size: 0.82rem; margin-bottom: 5px; }
+
+  .players-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .player-chip {
+    background: rgba(255,255,255,0.06);
+    border-radius: 40px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .player-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .btn {
+    width: 100%; max-width: 400px;
+    padding: 15px;
+    border: none; border-radius: 50px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 1.05rem; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+    position: relative; overflow: hidden;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-primary { background: linear-gradient(135deg, var(--accent1), #c23b7b); color: white; box-shadow: 0 4px 20px rgba(255,107,157,0.4); }
+  .btn-secondary { background: linear-gradient(135deg, var(--accent3), #3a9fd4); color: white; box-shadow: 0 4px 20px rgba(107,207,255,0.3); }
+  .btn-yellow { background: linear-gradient(135deg, var(--accent2), #e5b800); color: #0f0a1e; box-shadow: 0 4px 20px rgba(255,217,61,0.4); }
+  .btn-green { background: linear-gradient(135deg, var(--accent4), #5bbf4a); color: #0f0a1e; box-shadow: 0 4px 20px rgba(168,255,120,0.4); }
+  .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--muted); }
+
+  .input-field {
+    width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 13px 16px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 1rem; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+    text-align: right; margin-bottom: 12px;
+  }
+  .input-field:focus { border-color: var(--accent3); }
+  .input-field::placeholder { color: var(--muted); }
+
+  .round-badge { font-size: 0.82rem; color: var(--muted); text-align: center; margin-bottom: 6px; }
+
+  .round-type-tag {
+    display: inline-block;
+    padding: 4px 14px; border-radius: 30px;
+    font-size: 0.78rem; font-weight: 700;
+    margin-bottom: 14px; letter-spacing: 1px;
+  }
+
+  .question-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    padding: 22px; text-align: center;
+    font-size: clamp(1.05rem, 4vw, 1.35rem);
+    font-weight: 700; line-height: 1.5;
+    margin-bottom: 18px;
+    width: 100%; max-width: 400px;
+  }
+
+  .answers-grid { display: grid; gap: 9px; width: 100%; max-width: 400px; }
+
+  .answer-btn {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 13px 16px;
+    color: var(--text);
+    font-family: 'Heebo', sans-serif;
+    font-size: 0.95rem; font-weight: 500;
+    cursor: pointer; text-align: right;
+    transition: all 0.2s;
+  }
+  .answer-btn:hover { background: rgba(107,207,255,0.15); border-color: var(--accent3); transform: translateX(-3px); }
+  .answer-btn.selected { background: rgba(107,207,255,0.2); border-color: var(--accent3); }
+  .answer-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+  .timer-ring { position: relative; width: 65px; height: 65px; margin: 0 auto 14px; }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-number {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem; color: var(--accent2);
+  }
+
+  .scores-list { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 9px; }
+
+  .score-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px; padding: 11px 16px;
+    border: 1px solid rgba(255,255,255,0.07);
+    animation: slideIn 0.4s ease both;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .score-row:nth-child(1) { border-color: rgba(255,217,61,0.4); background: rgba(255,217,61,0.08); }
+  .score-row:nth-child(2) { border-color: rgba(192,192,192,0.3); }
+  .score-row:nth-child(3) { border-color: rgba(205,127,50,0.3); }
+  .score-rank { font-size: 1.2rem; margin-left: 10px; }
+  .score-name { font-weight: 700; flex: 1; }
+  .score-pts { font-family: 'Fredoka One', cursive; font-size: 1.2rem; color: var(--accent2); }
+
+  .waiting-dots span {
+    display: inline-block; width: 9px; height: 9px;
+    border-radius: 50%; background: var(--accent3);
+    margin: 0 3px; animation: bounce 1.2s infinite;
+  }
+  .waiting-dots span:nth-child(2) { animation-delay: 0.2s; background: var(--accent1); }
+  .waiting-dots span:nth-child(3) { animation-delay: 0.4s; background: var(--accent2); }
+  @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-10px); } }
+
+  .emoji-big { font-size: 3.5rem; text-align: center; margin-bottom: 14px; animation: wiggle 1s ease infinite; }
+  @keyframes wiggle { 0%,100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+
+  .divider { color: var(--muted); text-align: center; margin: 6px 0 14px; font-size: 0.88rem; }
+
+  .progress-bar-wrap { width: 100%; max-width: 400px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--accent1), var(--accent2)); transition: width 0.5s ease; }
+
+  .writing-input {
+    width: 100%; max-width: 400px;
+    background: rgba(255,255,255,0.07);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 14px; padding: 14px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 0.95rem; color: var(--text);
+    resize: none; min-height: 75px;
+    outline: none; text-align: right;
+    transition: border-color 0.2s; margin-bottom: 12px;
+  }
+  .writing-input:focus { border-color: var(--accent1); }
+
+  .reveal-card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius); padding: 14px 18px;
+    margin-bottom: 9px; width: 100%; max-width: 400px;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .reveal-card .answer-text { font-size: 0.95rem; font-weight: 600; margin-bottom: 3px; }
+  .reveal-card .author-text { font-size: 0.78rem; color: var(--muted); }
+
+  h2 { font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center; margin-bottom: 7px; }
+  p.center { text-align: center; color: var(--muted); margin-bottom: 18px; font-size: 0.92rem; }
+  .section-label { font-size: 0.73rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; text-align: center; }
+
+  .submitted-msg { text-align: center; color: var(--accent4); font-weight: 700; font-size: 1.05rem; margin-top: 10px; }
+
+  #error-toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #ff5050; color: white; padding: 12px 24px;
+    border-radius: 30px; font-weight: 700; z-index: 9999;
+    display: none; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="confetti-container" id="confettiContainer"></div>
+<div id="error-toast"></div>
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="logo">🎂 יום הולדת!</div>
+  <div class="subtitle">משחק משפחתי מחבר</div>
+  <button class="btn btn-primary" onclick="showScreen('screen-create')">🎮 פתח חדר חדש</button>
+  <div class="divider">— או —</div>
+  <button class="btn btn-secondary" onclick="showScreen('screen-join')">📱 הצטרף לחדר</button>
+</div>
+
+<!-- CREATE -->
+<div class="screen" id="screen-create">
+  <div class="logo" style="font-size:2rem">🎉 פתיחת חדר</div>
+  <div class="card">
+    <div class="label">השם שלך (מנחה)</div>
+    <input class="input-field" id="host-name" placeholder="למשל: שרה" maxlength="15"/>
+    <div class="label">שם יום ההולדת 🎂</div>
+    <input class="input-field" id="birthday-name" placeholder="למשל: מיה" maxlength="15"/>
+    <button class="btn btn-primary" onclick="createRoom()">✨ צור חדר</button>
+  </div>
+  <button class="btn btn-ghost" onclick="showScreen('screen-home')">← חזרה</button>
+</div>
+
+<!-- JOIN -->
+<div class="screen" id="screen-join">
+  <div class="logo" style="font-size:2rem">📱 הצטרפות</div>
+  <div class="card">
+    <div class="label">קוד החדר</div>
+    <input class="input-field" id="join-code" placeholder="1234" maxlength="4"
+      style="text-align:center;font-size:2rem;letter-spacing:8px;font-family:'Fredoka One',cursive"
+      oninput="this.value=this.value.replace(/\D/g,'')"/>
+    <div class="label">השם שלך</div>
+    <input class="input-field" id="join-name" placeholder="למשל: דוד" maxlength="15"/>
+    <button class="btn btn-secondary" onclick="joinRoom()">🚀 כניסה</button>
+  </div>
+  <button class="btn btn-ghost" onclick="showScreen('screen-home')">← חזרה</button>
+</div>
+
+<!-- HOST LOBBY -->
+<div class="screen" id="screen-host-lobby">
+  <div class="logo" style="font-size:1.9rem">🎊 ממתינים לשחקנים</div>
+  <div class="card">
+    <div class="label">שתפו את הקוד!</div>
+    <div class="room-code-display" id="display-room-code">----</div>
+    <div class="label" style="margin-top:8px">מחוברים: <span id="player-count">0</span></div>
+    <div class="players-list" id="host-players-list"></div>
+  </div>
+  <button class="btn btn-green" id="start-btn" onclick="startGame()" disabled>
+    🟢 התחל משחק (<span id="start-count">0</span>/2 מינימום)
+  </button>
+</div>
+
+<!-- PLAYER LOBBY -->
+<div class="screen" id="screen-player-lobby">
+  <div class="emoji-big">🥳</div>
+  <h2>הצטרפת!</h2>
+  <p class="center" id="player-lobby-msg">ממתין שהמנחה יתחיל...</p>
+  <div class="waiting-dots"><span></span><span></span><span></span></div>
+</div>
+
+<!-- QUESTION HOST -->
+<div class="screen" id="screen-question-host">
+  <div class="round-badge" id="q-host-badge"></div>
+  <div class="round-type-tag" id="q-host-type-tag"></div>
+  <div class="timer-ring">
+    <svg width="65" height="65">
+      <circle cx="32.5" cy="32.5" r="28" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="5"/>
+      <circle id="timer-circle-host" cx="32.5" cy="32.5" r="28" fill="none" stroke="#ffd93d" stroke-width="5"
+        stroke-dasharray="175.9" stroke-dashoffset="0" stroke-linecap="round"/>
+    </svg>
+    <div class="timer-number" id="timer-num-host">20</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-host" style="width:0%"></div></div>
+  <div class="question-box" id="q-host-text"></div>
+  <div class="section-label" id="answers-waiting-label">ממתין לתשובות...</div>
+  <div id="host-answer-area" style="width:100%;max-width:400px;margin-bottom:10px"></div>
+  <button class="btn btn-yellow" id="next-round-btn" style="display:none;max-width:400px" onclick="hostReveal()">הצג תוצאות ←</button>
+</div>
+
+<!-- QUESTION PLAYER -->
+<div class="screen" id="screen-question-player">
+  <div class="round-badge" id="q-player-badge"></div>
+  <div class="round-type-tag" id="q-player-type-tag"></div>
+  <div class="timer-ring">
+    <svg width="65" height="65">
+      <circle cx="32.5" cy="32.5" r="28" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="5"/>
+      <circle id="timer-circle-player" cx="32.5" cy="32.5" r="28" fill="none" stroke="#ffd93d" stroke-width="5"
+        stroke-dasharray="175.9" stroke-dashoffset="0" stroke-linecap="round"/>
+    </svg>
+    <div class="timer-number" id="timer-num-player">20</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-player" style="width:0%"></div></div>
+  <div class="question-box" id="q-player-text"></div>
+  <div id="q-player-input-area"></div>
+  <div class="submitted-msg" id="q-submitted-msg" style="display:none">✅ תשובה נשלחה! ממתין לשאר...</div>
+</div>
+
+<!-- REVEAL -->
+<div class="screen" id="screen-reveal">
+  <h2 id="reveal-title">התשובות! 👀</h2>
+  <p class="center" id="reveal-question"></p>
+  <p style="text-align:center;font-size:0.85rem;color:var(--accent2);margin-bottom:12px" id="reveal-scoring-msg"></p>
+  <div id="reveal-cards" style="width:100%;max-width:400px"></div>
+  <button class="btn btn-primary" style="max-width:400px;margin-top:10px" id="reveal-next-btn" onclick="hostGoLeaderboard()">המשך ←</button>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="screen" id="screen-leaderboard">
+  <h2>🏆 ניקוד</h2>
+  <p class="center" id="leaderboard-subtitle"></p>
+  <div class="scores-list" id="scores-list"></div>
+  <button class="btn btn-primary" style="max-width:400px;margin-top:14px" id="leaderboard-next-btn" onclick="hostNextRound()">המשך ←</button>
+</div>
+
+<!-- FINAL -->
+<div class="screen" id="screen-final">
+  <div style="font-size:4.5rem;text-align:center;margin-bottom:14px">🎂</div>
+  <h2 id="final-title">כל הכבוד!</h2>
+  <p class="center" id="final-msg"></p>
+  <div class="scores-list" id="final-scores"></div>
+  <button class="btn btn-yellow" style="max-width:400px;margin-top:18px" onclick="location.reload()">🔄 משחק חדש</button>
+</div>
+
+<script>
+// ─── FIREBASE CONFIG ───────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyAiZdYWYQkWgskRLtaCXq7b0qpAEhJI0Uc",
+  authDomain: "happybirthday-b50ab.firebaseapp.com",
+  databaseURL: "https://happybirthday-b50ab-default-rtdb.firebaseio.com",
+  projectId: "happybirthday-b50ab",
+  storageBucket: "happybirthday-b50ab.firebasestorage.app",
+  messagingSenderId: "569638202160",
+  appId: "1:569638202160:web:0603c312e99c11454b36f5"
+});
+
+const db = firebase.database();
+
+// ─── CONSTANTS ──────────────────────────────────────────────
+const EMOJIS  = ['🦁','🐬','🦋','🐝','🦊','🐧','🌸','⭐','🍕','🎸','🌈','🦄','🐙','🍀','🎯','🦩'];
+const COLORS  = ['#ff6b9d','#ffd93d','#6bcfff','#a8ff78','#ff9f7f','#b39ddb','#80deea','#f48fb1'];
+const RANKS   = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
+const TOTAL_ROUNDS = 6;
+const QUESTION_TIME = 35;
+
+const QUESTIONS = [
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר להתעורר ב-5 בבוקר ביום חופשי?' },
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר לשכוח יום הולדת של מישהו?' },
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר להיות עשיר בעוד 10 שנים?' },
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר להישאר אחרון בחגיגה?' },
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר לבכות בסרט רומנטי?' },
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר לאכול את כל האוכל בשולחן?' },
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר לאבד את הטלפון שלו?' },
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר לצחוק בזמן לא מתאים?' },
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר לטייל לבד לחו"ל?' },
+  { type:'whois', tag:'🎭 מי הכי...', q:'מי הכי סביר להיות הראשון לישון בערב?' },
+  { type:'write', tag:'✍️ ממלאים ריק', q:'הדבר הכי מצחיק שקרה במשפחה שלנו הוא ___' },
+  { type:'write', tag:'✍️ ממלאים ריק', q:'אם המשפחה שלנו הייתה סדרה, היא הייתה נקראת ___' },
+  { type:'write', tag:'✍️ ממלאים ריק', q:'הביטוי שהכי שומעים במשפחה שלנו הוא ___' },
+  { type:'write', tag:'✍️ ממלאים ריק', q:'אם היינו צריכים לבחור מנהיג למשפחה, זה היה ___' },
+  { type:'write', tag:'✍️ ממלאים ריק', q:'הדבר שאף פעם לא ייגמר בבית שלנו הוא ___' },
+  { type:'write', tag:'✍️ ממלאים ריק', q:'הדבר שכולם יזכרו מהחגיגה של היום הוא ___' },
+  { type:'write', tag:'✍️ ממלאים ריק', q:'אם {{name}} הייתה סופרהירו, הכוח שלה היה ___' },
+  { type:'trivia', tag:'🧠 טריוויה', q:'כמה צבעים יש בקשת בענן?', opts:['5','6','7','8'], answer:'7' },
+  { type:'trivia', tag:'🧠 טריוויה', q:'איזו ארץ הכי גדולה בעולם?', opts:['קנדה 🇨🇦','סין 🇨🇳','רוסיה 🇷🇺','ארה"ב 🇺🇸'], answer:'רוסיה 🇷🇺' },
+  { type:'trivia', tag:'🧠 טריוויה', q:'מה הפרי הכי נמכר בעולם?', opts:['תפוח 🍎','בננה 🍌','תפוז 🍊','ענב 🍇'], answer:'בננה 🍌' },
+  { type:'trivia', tag:'🧠 טריוויה', q:'כמה שעות שינה בממוצע צריך אדם?', opts:['5-6 שעות','7-9 שעות','10-11 שעות','4-5 שעות'], answer:'7-9 שעות' },
+];
+
+// ─── STATE ──────────────────────────────────────────────────
+let S = {
+  roomCode: null, isHost: false,
+  myName: '', myColor: '', myEmoji: '',
+  birthdayName: '',
+  currentRound: 0,
+  myAnswer: null,
+  timerInterval: null, timeLeft: QUESTION_TIME,
+  usedQ: [],
+  listeners: [],
+  lastPhase: null,
+};
+
+// ─── HELPERS ────────────────────────────────────────────────
+function ref(path)      { return db.ref(`rooms/${S.roomCode}/${path}`); }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function showError(msg) {
+  const t = document.getElementById('error-toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+function fmtQ(q) { return { ...q, q: q.q.replace(/{{name}}/g, S.birthdayName) }; }
+
+function addListener(refObj, event, cb) {
+  refObj.on(event, cb);
+  S.listeners.push({ refObj, event, cb });
+}
+function removeAllListeners() {
+  S.listeners.forEach(({ refObj, event, cb }) => refObj.off(event, cb));
+  S.listeners = [];
+}
+
+function getTagStyle(type) {
+  return { trivia:'background:rgba(107,207,255,0.2);color:#6bcfff',
+           whois:'background:rgba(255,107,157,0.2);color:#ff6b9d',
+           write:'background:rgba(168,255,120,0.2);color:#a8ff78' }[type] || '';
+}
+
+// ─── TIMER ──────────────────────────────────────────────────
+function startTimer(seconds, side, onEnd) {
+  stopTimer();
+  S.timeLeft = seconds;
+  const numEl    = document.getElementById(`timer-num-${side}`);
+  const circleEl = document.getElementById(`timer-circle-${side}`);
+  const circ     = 175.9;
+  S.timerInterval = setInterval(() => {
+    S.timeLeft--;
+    if (numEl)    numEl.textContent = S.timeLeft;
+    if (circleEl) {
+      circleEl.style.strokeDashoffset = circ * (1 - S.timeLeft / seconds);
+      if (S.timeLeft <= 5) circleEl.style.stroke = '#ff6b9d';
+    }
+    if (S.timeLeft <= 0) { stopTimer(); if (onEnd) onEnd(); }
+  }, 1000);
+}
+function stopTimer() {
+  if (S.timerInterval) { clearInterval(S.timerInterval); S.timerInterval = null; }
+}
+
+// ─── CREATE ROOM ────────────────────────────────────────────
+async function createRoom() {
+  const hostName     = document.getElementById('host-name').value.trim();
+  const birthdayName = document.getElementById('birthday-name').value.trim();
+  if (!hostName || !birthdayName) { showError('אנא מלאי שם ושם יום הולדת'); return; }
+
+  const code = String(Math.floor(1000 + Math.random() * 9000));
+  S.roomCode    = code;
+  S.isHost      = true;
+  S.myName      = hostName;
+  S.birthdayName = birthdayName;
+  S.myColor     = COLORS[0];
+  S.myEmoji     = EMOJIS[0];
+
+  await db.ref(`rooms/${code}`).set({
+    meta: { birthdayName, phase: 'lobby', currentRound: 0, totalRounds: TOTAL_ROUNDS },
+    scores: { [hostName]: 0 },
+    players: { [hostName]: { name: hostName, color: COLORS[0], emoji: EMOJIS[0], isHost: true, joinedAt: Date.now() } },
+  });
+
+  document.getElementById('display-room-code').textContent = code;
+  showScreen('screen-host-lobby');
+  listenHostLobby();
+}
+
+// ─── JOIN ROOM ───────────────────────────────────────────────
+async function joinRoom() {
+  const code = document.getElementById('join-code').value.trim();
+  const name = document.getElementById('join-name').value.trim();
+  if (!code || code.length !== 4 || !name) { showError('קוד לא תקין או שם חסר'); return; }
+
+  const snap = await db.ref(`rooms/${code}/meta`).once('value');
+  if (!snap.exists()) { showError('חדר לא נמצא! בדקי את הקוד'); return; }
+
+  const meta = snap.val();
+  if (meta.phase !== 'lobby') { showError('המשחק כבר התחיל'); return; }
+
+  S.roomCode     = code;
+  S.isHost       = false;
+  S.myName       = name;
+  S.birthdayName = meta.birthdayName;
+
+  // Assign color/emoji based on player count
+  const playersSnap = await db.ref(`rooms/${code}/players`).once('value');
+  const idx = playersSnap.exists() ? Object.keys(playersSnap.val()).length : 0;
+  S.myColor = COLORS[idx % COLORS.length];
+  S.myEmoji = EMOJIS[idx % EMOJIS.length];
+
+  await db.ref(`rooms/${code}/players/${name}`).set({
+    name, color: S.myColor, emoji: S.myEmoji, isHost: false, joinedAt: Date.now()
+  });
+  await db.ref(`rooms/${code}/scores/${name}`).set(0);
+
+  document.getElementById('player-lobby-msg').textContent = `היי ${name}! ממתין שהמנחה יתחיל... 🎉`;
+  showScreen('screen-player-lobby');
+  listenPlayerPhase();
+}
+
+// ─── HOST LOBBY ──────────────────────────────────────────────
+function listenHostLobby() {
+  addListener(ref('players'), 'value', snap => {
+    const players = snap.exists() ? Object.values(snap.val()) : [];
+    renderPlayerChips(players, 'host-players-list');
+    document.getElementById('player-count').textContent = players.length;
+    document.getElementById('start-count').textContent  = players.length;
+    document.getElementById('start-btn').disabled = players.length < 2;
+  });
+}
+
+function renderPlayerChips(players, containerId) {
+  const list = document.getElementById(containerId);
+  if (!list) return;
+  list.innerHTML = '';
+  players.sort((a,b) => a.joinedAt - b.joinedAt).forEach(p => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip';
+    chip.innerHTML = `<div class="player-avatar" style="background:${p.color}20;border:2px solid ${p.color}">${p.emoji}</div><span>${p.name}</span>`;
+    list.appendChild(chip);
+  });
+}
+
+// ─── PLAYER PHASE LISTENER ──────────────────────────────────
+function listenPlayerPhase() {
+  addListener(ref('meta'), 'value', snap => {
+    if (!snap.exists()) return;
+    const meta = snap.val();
+    const phase = meta.phase;
+    // מניעת קפיצות מסך - לא מעבדים את אותה פאזה פעמיים
+    if (phase === S.lastPhase && phase !== 'question') return;
+    if (phase === 'question' && meta.currentRound === S.currentRound) return;
+    S.lastPhase = phase;
+
+    if (phase === 'question') {
+      S.currentRound = meta.currentRound;
+      loadPlayerQuestion();
+    } else if (phase === 'reveal') {
+      showReveal(false);
+    } else if (phase === 'leaderboard') {
+      showLeaderboard(false);
+    } else if (phase === 'final') {
+      showFinal();
+    }
+  });
+}
+
+// ─── START GAME ──────────────────────────────────────────────
+async function startGame() {
+  removeAllListeners();
+  S.usedQ = [];
+  S.currentRound = 0;
+  await pushNextQuestion();
+}
+
+// ─── PICK & PUSH QUESTION ────────────────────────────────────
+async function pushNextQuestion() {
+  S.currentRound++;
+  if (S.currentRound > TOTAL_ROUNDS) { endGame(); return; }
+
+  const available = QUESTIONS.filter((_, i) => !S.usedQ.includes(i));
+  const idx       = Math.floor(Math.random() * available.length);
+  const raw       = available[idx];
+  S.usedQ.push(QUESTIONS.indexOf(raw));
+  const q = fmtQ(raw);
+
+  await ref('currentQuestion').set({ ...q, round: S.currentRound });
+  await ref('answers').remove();
+  await ref('meta').update({ phase: 'question', currentRound: S.currentRound });
+
+  renderHostQuestion(q);
+}
+
+// ─── HOST QUESTION ───────────────────────────────────────────
+function renderHostQuestion(q) {
+  showScreen('screen-question-host');
+  document.getElementById('q-host-badge').textContent  = `סיבוב ${S.currentRound} מתוך ${TOTAL_ROUNDS}`;
+  const tag = document.getElementById('q-host-type-tag');
+  tag.textContent = q.tag; tag.style.cssText = getTagStyle(q.type);
+  document.getElementById('q-host-text').textContent   = q.q;
+  document.getElementById('progress-host').style.width = ((S.currentRound-1)/TOTAL_ROUNDS*100)+'%';
+  document.getElementById('next-round-btn').style.display = 'none';
+  document.getElementById('answers-waiting-label').textContent = 'ממתין לתשובות...';
+
+  // גם המנחה עונה!
+  S.myAnswer = null;
+  renderHostAnswerArea(q);
+
+  startTimer(QUESTION_TIME, 'host', () => {
+    document.getElementById('next-round-btn').style.display = 'flex';
+  });
+
+  // Watch answer count - כולל המנחה
+  addListener(ref('answers'), 'value', snap => {
+    const answers = snap.exists() ? snap.val() : {};
+    const count   = Object.keys(answers).length;
+    ref('players').once('value').then(ps => {
+      const total = ps.exists() ? Object.keys(ps.val()).length : 0;
+      document.getElementById('answers-waiting-label').textContent = `${count} / ${total} ענו`;
+      if (count >= total && total > 0) {
+        stopTimer();
+        document.getElementById('next-round-btn').style.display = 'flex';
+      }
+    });
+  });
+}
+
+// ─── HOST ANSWER AREA ────────────────────────────────────────
+async function renderHostAnswerArea(q) {
+  const area = document.getElementById('host-answer-area');
+  if (!area) return;
+  area.innerHTML = '';
+
+  if (q.type === 'trivia') {
+    const grid = document.createElement('div');
+    grid.className = 'answers-grid';
+    q.opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = opt;
+      btn.onclick = () => hostSubmitAnswer(opt, grid);
+      grid.appendChild(btn);
+    });
+    area.appendChild(grid);
+  } else if (q.type === 'whois') {
+    const playersSnap = await ref('players').once('value');
+    const players = playersSnap.exists() ? Object.values(playersSnap.val()) : [];
+    const grid = document.createElement('div');
+    grid.className = 'answers-grid';
+    players.sort((a,b) => a.joinedAt - b.joinedAt).forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.innerHTML = `${p.emoji} ${p.name}`;
+      btn.onclick = () => hostSubmitAnswer(p.name, grid);
+      grid.appendChild(btn);
+    });
+    area.appendChild(grid);
+  } else if (q.type === 'write') {
+    const ta = document.createElement('textarea');
+    ta.className = 'writing-input';
+    ta.placeholder = 'כתב/י את תשובתך...';
+    ta.maxLength = 80;
+    area.appendChild(ta);
+    const sbtn = document.createElement('button');
+    sbtn.className = 'btn btn-primary';
+    sbtn.style.maxWidth = '400px';
+    sbtn.textContent = '📨 שלח';
+    sbtn.onclick = () => { if (ta.value.trim()) hostSubmitAnswer(ta.value.trim(), null); };
+    area.appendChild(sbtn);
+  }
+}
+
+async function hostSubmitAnswer(answer, grid) {
+  if (S.myAnswer) return;
+  S.myAnswer = answer;
+  if (grid) {
+    grid.querySelectorAll('.answer-btn').forEach(b => {
+      b.disabled = true;
+      if (b.textContent === answer || b.innerHTML.includes(answer)) b.classList.add('selected');
+    });
+  }
+  const area = document.getElementById('host-answer-area');
+  if (area) area.style.opacity = '0.5';
+  await ref(`answers/${S.myName}`).set(answer);
+}
+
+// ─── PLAYER QUESTION ─────────────────────────────────────────
+async function loadPlayerQuestion() {
+  const snap = await ref('currentQuestion').once('value');
+  if (!snap.exists()) return;
+  const q = snap.val();
+  S.myAnswer = null;
+
+  showScreen('screen-question-player');
+  document.getElementById('q-player-badge').textContent  = `סיבוב ${S.currentRound} מתוך ${TOTAL_ROUNDS}`;
+  const tag = document.getElementById('q-player-type-tag');
+  tag.textContent = q.tag; tag.style.cssText = getTagStyle(q.type);
+  document.getElementById('q-player-text').textContent   = q.q;
+  document.getElementById('progress-player').style.width = ((S.currentRound-1)/TOTAL_ROUNDS*100)+'%';
+  document.getElementById('q-submitted-msg').style.display = 'none';
+
+  const area = document.getElementById('q-player-input-area');
+  area.innerHTML = '';
+
+  if (q.type === 'trivia') {
+    const grid = document.createElement('div');
+    grid.className = 'answers-grid';
+    q.opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = opt;
+      btn.onclick = () => submitAnswer(opt, grid);
+      grid.appendChild(btn);
+    });
+    area.appendChild(grid);
+  } else if (q.type === 'whois') {
+    const playersSnap = await ref('players').once('value');
+    const players     = playersSnap.exists() ? Object.values(playersSnap.val()) : [];
+    const grid = document.createElement('div');
+    grid.className = 'answers-grid';
+    players.sort((a,b) => a.joinedAt - b.joinedAt).forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.innerHTML = `${p.emoji} ${p.name}`;
+      btn.onclick = () => submitAnswer(p.name, grid);
+      grid.appendChild(btn);
+    });
+    area.appendChild(grid);
+  } else if (q.type === 'write') {
+    const ta = document.createElement('textarea');
+    ta.className = 'writing-input';
+    ta.placeholder = 'כתב/י את תשובתך הכי מצחיקה... 😄';
+    ta.maxLength = 80;
+    area.appendChild(ta);
+    const sbtn = document.createElement('button');
+    sbtn.className = 'btn btn-primary';
+    sbtn.style.maxWidth = '400px';
+    sbtn.textContent = '📨 שלח';
+    sbtn.onclick = () => { if (ta.value.trim()) submitAnswer(ta.value.trim(), null); };
+    area.appendChild(sbtn);
+  }
+
+  startTimer(QUESTION_TIME, 'player', () => {
+    if (!S.myAnswer) submitAnswer('לא ענה/תה 😅', null);
+  });
+}
+
+async function submitAnswer(answer, grid) {
+  if (S.myAnswer) return;
+  S.myAnswer = answer;
+  stopTimer();
+
+  if (grid) {
+    grid.querySelectorAll('.answer-btn').forEach(b => {
+      b.disabled = true;
+      if (b.textContent === answer || b.innerHTML.includes(answer)) b.classList.add('selected');
+    });
+  }
+
+  document.getElementById('q-player-input-area').style.opacity = '0.5';
+  document.getElementById('q-submitted-msg').style.display = 'block';
+
+  await ref(`answers/${S.myName}`).set(answer);
+}
+
+// ─── HOST → REVEAL ───────────────────────────────────────────
+async function hostReveal() {
+  stopTimer();
+  removeAllListeners();
+
+  // Score
+  const [qSnap, aSnap, psSnap, scSnap] = await Promise.all([
+    ref('currentQuestion').once('value'),
+    ref('answers').once('value'),
+    ref('players').once('value'),
+    ref('scores').once('value'),
+  ]);
+
+  const q       = qSnap.val();
+  const answers = aSnap.exists()  ? aSnap.val()  : {};
+  const scores  = scSnap.exists() ? scSnap.val() : {};
+
+  if (q.type === 'trivia' && q.answer) {
+    Object.entries(answers).forEach(([name, ans]) => {
+      if (ans === q.answer) scores[name] = (scores[name]||0) + 100;
+    });
+  } else if (q.type === 'whois') {
+    const votes = {};
+    Object.values(answers).forEach(v => { votes[v] = (votes[v]||0)+1; });
+    const max = Math.max(...Object.values(votes), 0);
+    if (max >= 2) {
+      Object.entries(votes).filter(([,c]) => c===max).forEach(([name]) => {
+        scores[name] = (scores[name]||0) + 150;
+      });
+    }
+  } else if (q.type === 'write') {
+    Object.entries(answers).forEach(([name, ans]) => {
+      if (ans && ans !== 'לא ענה/תה 😅') scores[name] = (scores[name]||0) + 50;
+    });
+  }
+
+  await ref('scores').set(scores);
+  await ref('meta').update({ phase: 'reveal' });
+  showReveal(true);
+}
+
+// ─── REVEAL SCREEN ───────────────────────────────────────────
+async function showReveal(isHost) {
+  showScreen('screen-reveal');
+  const [qSnap, aSnap, psSnap] = await Promise.all([
+    ref('currentQuestion').once('value'),
+    ref('answers').once('value'),
+    ref('players').once('value'),
+  ]);
+
+  const q       = qSnap.val();
+  const answers = aSnap.exists()  ? aSnap.val()  : {};
+  const players = psSnap.exists() ? Object.values(psSnap.val()) : [];
+
+  document.getElementById('reveal-title').textContent    = 'התשובות! 👀';
+  document.getElementById('reveal-question').textContent = q.q;
+
+  // הסבר ניקוד
+  let scoringMsg = '';
+  if (q.type === 'whois') scoringMsg = '🏆 מי שמצביעים עליו הכי הרבה מקבל 150 נקודות!';
+  else if (q.type === 'write') scoringMsg = '🏆 כל מי שענה מקבל 50 נקודות השתתפות!';
+  else if (q.type === 'trivia') scoringMsg = '🏆 מי שענה נכון מקבל 100 נקודות!';
+  document.getElementById('reveal-scoring-msg').textContent = scoringMsg;
+  document.getElementById('reveal-next-btn').style.display = isHost ? 'flex' : 'none';
+
+  const container = document.getElementById('reveal-cards');
+  container.innerHTML = '';
+
+  if (q.type === 'whois') {
+    const votes = {};
+    players.forEach(p => { votes[p.name] = 0; });
+    Object.values(answers).forEach(v => { votes[v] = (votes[v]||0)+1; });
+    Object.entries(votes).sort((a,b) => b[1]-a[1]).forEach(([name, count], i) => {
+      const p = players.find(p => p.name === name);
+      addRevealCard(container, `${p?p.emoji:'👤'} ${name}`, `${count} קולות ${'⭐'.repeat(Math.min(count,5))}`, i);
+    });
+  } else {
+    Object.entries(answers).forEach(([name, ans], i) => {
+      const p = players.find(p => p.name === name);
+      addRevealCard(container, `"${ans}"`, `${p?p.emoji:'👤'} ${name}`, i);
+    });
+  }
+
+  if (!isHost) listenPlayerPhase();
+}
+
+function addRevealCard(container, main, sub, delay) {
+  const card = document.createElement('div');
+  card.className = 'reveal-card';
+  card.style.animationDelay = `${delay * 0.12}s`;
+  card.innerHTML = `<div class="answer-text">${main}</div><div class="author-text">${sub}</div>`;
+  container.appendChild(card);
+}
+
+// ─── HOST → LEADERBOARD ──────────────────────────────────────
+async function hostGoLeaderboard() {
+  await ref('meta').update({ phase: 'leaderboard' });
+  showLeaderboard(true);
+}
+
+// ─── LEADERBOARD ─────────────────────────────────────────────
+async function showLeaderboard(isHost) {
+  showScreen('screen-leaderboard');
+  const [scSnap, psSnap] = await Promise.all([
+    ref('scores').once('value'),
+    ref('players').once('value'),
+  ]);
+
+  const scores  = scSnap.exists() ? scSnap.val() : {};
+  const players = psSnap.exists() ? Object.values(psSnap.val()) : [];
+  const sorted  = Object.entries(scores).sort((a,b) => b[1]-a[1]);
+  const isLast  = S.currentRound >= TOTAL_ROUNDS;
+
+  document.getElementById('leaderboard-subtitle').textContent =
+    isLast ? 'תוצאות סופיות! 🏆' : `אחרי סיבוב ${S.currentRound} מתוך ${TOTAL_ROUNDS}`;
+
+  const list = document.getElementById('scores-list');
+  list.innerHTML = '';
+  sorted.forEach(([name, pts], i) => {
+    const p = players.find(p => p.name === name);
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    row.style.animationDelay = `${i * 0.1}s`;
+    row.innerHTML = `<span class="score-rank">${RANKS[i]||'•'}</span><span style="font-size:1.1rem;margin-left:8px">${p?p.emoji:'👤'}</span><span class="score-name">${name}</span><span class="score-pts">${pts} נק'</span>`;
+    list.appendChild(row);
+  });
+
+  const btn = document.getElementById('leaderboard-next-btn');
+  btn.style.display = isHost ? 'flex' : 'none';
+  btn.textContent   = isLast ? '🎉 ראה תוצאות סופיות' : 'סיבוב הבא! →';
+
+  if (!isHost) listenPlayerPhase();
+}
+
+async function hostNextRound() {
+  if (S.currentRound >= TOTAL_ROUNDS) { endGame(); return; }
+  removeAllListeners();
+  await pushNextQuestion();
+}
+
+// ─── END GAME ────────────────────────────────────────────────
+async function endGame() {
+  await ref('meta').update({ phase: 'final' });
+  showFinal();
+}
+
+async function showFinal() {
+  showScreen('screen-final');
+  launchConfetti();
+
+  const [scSnap, psSnap, metaSnap] = await Promise.all([
+    ref('scores').once('value'),
+    ref('players').once('value'),
+    ref('meta').once('value'),
+  ]);
+
+  const scores       = scSnap.exists()    ? scSnap.val()                : {};
+  const players      = psSnap.exists()    ? Object.values(psSnap.val()) : [];
+  const birthdayName = metaSnap.exists()  ? metaSnap.val().birthdayName : '';
+  const sorted       = Object.entries(scores).sort((a,b) => b[1]-a[1]);
+  const winner       = sorted[0];
+
+  document.getElementById('final-title').textContent = `🎉 ${winner ? winner[0] : 'כולם'} ניצח/ה!`;
+  document.getElementById('final-msg').textContent   = `יום הולדת שמח ${birthdayName}! 🎂 תודה ששיחקתם ביחד!`;
+
+  const list = document.getElementById('final-scores');
+  list.innerHTML = '';
+  sorted.forEach(([name, pts], i) => {
+    const p = players.find(p => p.name === name);
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    row.style.animationDelay = `${i * 0.12}s`;
+    row.innerHTML = `<span class="score-rank">${RANKS[i]||'•'}</span><span style="font-size:1.1rem;margin-left:8px">${p?p.emoji:'👤'}</span><span class="score-name">${name}</span><span class="score-pts">${pts} נק'</span>`;
+    list.appendChild(row);
+  });
+}
+
+// ─── CONFETTI ────────────────────────────────────────────────
+function launchConfetti() {
+  const c = document.getElementById('confettiContainer');
+  c.innerHTML = '';
+  const cols = ['#ff6b9d','#ffd93d','#6bcfff','#a8ff78','#ff9f7f','#b39ddb'];
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    const size = 6 + Math.random() * 8;
+    p.style.cssText = `left:${Math.random()*100}%;background:${cols[~~(Math.random()*cols.length)]};width:${size}px;height:${size}px;animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*2}s;border-radius:${Math.random()>.5?'50%':'2px'}`;
+    c.appendChild(p);
+  }
+  setTimeout(() => { c.innerHTML = ''; }, 7000);
+}
+</script>
+</body>
+</html>
