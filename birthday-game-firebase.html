@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎂 Happy Birthday!</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Varela+Round&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink:   #FF6FB7;
+  --pink2:  #FF3D9A;
+  --purple: #C77DFF;
+  --yellow: #FFD93D;
+  --mint:   #5EFFD4;
+  --bg:     #12001F;
+  --card:   #1E0035;
+  --card2:  #28004A;
+  --text:   #FFF0FA;
+  --muted:  #C09DC8;
+  --r:      20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Varela Round',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+.bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.3;animation:drift 8s ease-in-out infinite alternate;}
+.orb1{width:400px;height:400px;background:var(--pink);top:-100px;left:-100px;}
+.orb2{width:350px;height:350px;background:var(--purple);bottom:-80px;right:-80px;animation-delay:2s;}
+.orb3{width:250px;height:250px;background:var(--yellow);top:40%;left:40%;animation-delay:4s;}
+@keyframes drift{from{transform:translate(0,0) scale(1);}to{transform:translate(30px,20px) scale(1.1);}}
+
+.sparkle-wrap{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.sp{position:absolute;width:5px;height:5px;border-radius:50%;animation:twinkle 3s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(0);}50%{opacity:1;transform:scale(1);}}
+
+.cf-wrap{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden;}
+.cp{position:absolute;top:-20px;animation:cffall linear infinite;opacity:0;}
+@keyframes cffall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+.screen{display:none;min-height:100vh;padding:28px 20px;position:relative;z-index:1;flex-direction:column;align-items:center;justify-content:center;}
+.screen.active{display:flex;}
+
+.logo{font-family:'Righteous',cursive;font-size:clamp(2.2rem,8vw,3.8rem);background:linear-gradient(135deg,var(--pink),var(--yellow),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:4px;filter:drop-shadow(0 0 20px rgba(255,111,183,0.5));animation:bob 3s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+.subtitle{color:var(--muted);text-align:center;font-size:0.95rem;margin-bottom:22px;font-weight:700;}
+h2{font-family:'Righteous',cursive;font-size:1.6rem;text-align:center;margin-bottom:8px;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+.card{background:var(--card);border:1px solid rgba(255,111,183,0.2);border-radius:var(--r);padding:22px;width:100%;max-width:420px;margin-bottom:14px;box-shadow:0 8px 40px rgba(199,125,255,0.12),inset 0 1px 0 rgba(255,255,255,0.05);}
+
+.room-code{font-family:'Pacifico',cursive;font-size:3rem;letter-spacing:14px;color:var(--yellow);text-align:center;padding:18px;background:rgba(255,217,61,0.08);border-radius:14px;border:2px dashed rgba(255,217,61,0.4);margin:10px 0;text-shadow:0 0 20px rgba(255,217,61,0.5);}
+
+.inp{width:100%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,111,183,0.25);border-radius:14px;padding:14px 16px;font-family:'Nunito',sans-serif;font-size:1rem;color:var(--text);outline:none;text-align:right;margin-bottom:12px;transition:border-color 0.2s,box-shadow 0.2s;}
+.inp:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,111,183,0.15);}
+.inp::placeholder{color:var(--muted);}
+.lbl{color:var(--muted);font-size:0.82rem;font-weight:800;margin-bottom:5px;letter-spacing:0.5px;}
+
+.btn{width:100%;max-width:420px;padding:15px 20px;border:none;border-radius:50px;font-family:'Varela Round',sans-serif;font-size:1.05rem;font-weight:700;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;margin-bottom:10px;}
+.btn:active{transform:scale(0.96);}
+.btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+.btn-pink{background:linear-gradient(135deg,#FF6FB7,#FF3D9A);color:white;box-shadow:0 6px 24px rgba(255,61,154,0.45);}
+.btn-purple{background:linear-gradient(135deg,#C77DFF,#9B00FF);color:white;box-shadow:0 6px 24px rgba(155,0,255,0.35);}
+.btn-yellow{background:linear-gradient(135deg,#FFD93D,#FFA800);color:#1a0030;box-shadow:0 6px 24px rgba(255,168,0,0.4);}
+.btn-mint{background:linear-gradient(135deg,#5EFFD4,#00C9A7);color:#1a0030;box-shadow:0 6px 24px rgba(0,201,167,0.4);}
+.btn-ghost{background:transparent;border:1.5px solid rgba(255,255,255,0.15);color:var(--muted);}
+
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.chip{background:rgba(255,255,255,0.05);border:1px solid rgba(255,111,183,0.2);border-radius:40px;padding:9px 12px;display:flex;align-items:center;gap:8px;font-size:0.85rem;font-weight:700;animation:popin 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes popin{from{transform:scale(0.4);opacity:0;}to{transform:scale(1);opacity:1;}}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+
+.timer-wrap{position:relative;width:70px;height:70px;margin:0 auto 14px;}
+.timer-wrap svg{transform:rotate(-90deg);}
+.tnum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Righteous',cursive;font-size:1.5rem;color:var(--yellow);}
+
+.prog-wrap{width:100%;max-width:420px;height:6px;background:rgba(255,255,255,0.08);border-radius:10px;margin-bottom:16px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--pink),var(--purple));transition:width 0.5s ease;}
+
+.qbox{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,111,183,0.2);border-radius:var(--r);padding:22px;text-align:center;font-size:clamp(1.05rem,4vw,1.3rem);font-weight:800;line-height:1.5;margin-bottom:18px;width:100%;max-width:420px;}
+
+.ttag{display:inline-block;padding:5px 16px;border-radius:30px;font-size:0.8rem;font-weight:800;margin-bottom:14px;letter-spacing:0.5px;}
+
+.agrid{display:grid;gap:9px;width:100%;max-width:420px;}
+.abtn{background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px 16px;color:var(--text);font-family:'Nunito',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;text-align:right;transition:all 0.2s;}
+.abtn:hover{background:rgba(255,111,183,0.15);border-color:var(--pink);transform:translateX(-4px);}
+.abtn.picked{background:rgba(255,111,183,0.2);border-color:var(--pink);}
+.abtn:disabled{opacity:0.6;cursor:default;transform:none;}
+
+.winp{width:100%;max-width:420px;background:rgba(255,255,255,0.06);border:2px solid rgba(255,111,183,0.25);border-radius:14px;padding:14px;font-family:'Nunito',sans-serif;font-size:0.95rem;color:var(--text);resize:none;min-height:75px;outline:none;text-align:right;transition:border-color 0.2s;margin-bottom:12px;}
+.winp:focus{border-color:var(--pink);}
+
+.slist{width:100%;max-width:420px;display:flex;flex-direction:column;gap:9px;}
+.srow{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px 16px;animation:slidein 0.4s ease both;}
+@keyframes slidein{from{transform:translateX(30px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.srow:nth-child(1){border-color:rgba(255,215,0,0.5);background:rgba(255,215,0,0.08);}
+.srow:nth-child(2){border-color:rgba(192,192,192,0.35);}
+.srow:nth-child(3){border-color:rgba(205,127,50,0.35);}
+.srank{font-size:1.3rem;margin-left:10px;}
+.sname{font-weight:800;flex:1;}
+.spts{font-family:'Righteous',cursive;font-size:1.2rem;color:var(--yellow);}
+
+.rcard{background:var(--card2);border:1px solid rgba(255,111,183,0.2);border-radius:var(--r);padding:14px 18px;margin-bottom:9px;width:100%;max-width:420px;animation:popin 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+.rcard .rmain{font-size:1rem;font-weight:800;margin-bottom:3px;}
+.rcard .rsub{font-size:0.78rem;color:var(--muted);}
+
+.dots span{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 3px;animation:bounce 1.2s infinite;}
+.dots span:nth-child(1){background:var(--pink);}
+.dots span:nth-child(2){background:var(--purple);animation-delay:0.2s;}
+.dots span:nth-child(3){background:var(--yellow);animation-delay:0.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-10px);}}
+
+.bemoji{font-size:4rem;text-align:center;margin-bottom:14px;animation:wiggle 1.5s ease-in-out infinite;}
+@keyframes wiggle{0%,100%{transform:rotate(-8deg);}50%{transform:rotate(8deg);}}
+
+.divider{color:var(--muted);text-align:center;margin:6px 0 14px;font-size:0.88rem;}
+.wlbl{font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:8px;text-align:center;font-weight:800;}
+.pcenter{text-align:center;color:var(--muted);margin-bottom:14px;font-size:0.92rem;font-weight:600;}
+.stip{text-align:center;font-size:0.82rem;color:var(--yellow);margin-bottom:12px;font-weight:800;}
+.sok{text-align:center;color:var(--mint);font-weight:800;font-size:1.05rem;margin-top:10px;}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--pink2);color:white;padding:12px 24px;border-radius:30px;font-weight:800;z-index:9999;display:none;white-space:nowrap;box-shadow:0 4px 20px rgba(255,61,154,0.5);}
+
+.bdbanner{font-size:0.85rem;font-weight:800;color:var(--yellow);letter-spacing:1px;text-align:center;margin-bottom:20px;padding:8px 20px;background:rgba(255,217,61,0.1);border-radius:30px;border:1px solid rgba(255,217,61,0.3);}
+
+.emoji-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0 14px;}
+.ep{font-size:1.9rem;padding:10px;border-radius:14px;background:rgba(255,255,255,0.05);border:2px solid transparent;cursor:pointer;text-align:center;transition:all 0.15s;line-height:1;}
+.ep:hover{background:rgba(255,111,183,0.15);transform:scale(1.15);}
+.ep.chosen{background:rgba(255,111,183,0.25);border-color:var(--pink);transform:scale(1.2);}
+.room-code{font-family:'Righteous',cursive;font-size:3rem;letter-spacing:14px;color:var(--yellow);text-align:center;padding:18px;background:rgba(255,217,61,0.08);border-radius:14px;border:2px dashed rgba(255,217,61,0.4);margin:10px 0;text-shadow:0 0 20px rgba(255,217,61,0.5);}</style>
+</head>
+<body>
+<div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+<div class="sparkle-wrap" id="spWrap"></div>
+<div class="cf-wrap" id="cfWrap"></div>
+<div id="toast"></div>
+
+<!-- HOME -->
+<div class="screen active" id="s-home">
+  <div class="logo">🎂 Happy Birthday!</div>
+  <div class="bdbanner">🎀 מסיבת יום הולדת 14 🎀</div>
+  <button class="btn btn-pink"   onclick="go('s-create')">🎮 פתח חדר חדש (מנחה)</button>
+  <div class="divider">— או —</div>
+  <button class="btn btn-purple" onclick="go('s-join')">📱 הצטרף לחדר</button>
+</div>
+
+<!-- JOIN -->
+<div class="screen" id="s-join">
+  <div class="logo" style="font-size:2rem">📱 הצטרפות</div>
+  <div class="card">
+    <div class="lbl">קוד החדר</div>
+    <input class="inp" id="jcode" placeholder="1234" maxlength="4" style="text-align:center;font-size:2rem;letter-spacing:10px;font-family:'Righteous',cursive" oninput="this.value=this.value.replace(/\D/g,'')"/>
+    <div class="lbl">השם שלך</div>
+    <input class="inp" id="jname" placeholder="למשל: דוד" maxlength="15"/>
+    <div class="lbl">בחר/י אימוג'י 👇</div>
+    <div class="emoji-grid" id="emoji-picker"></div>
+    <button class="btn btn-purple" onclick="joinRoom()">🚀 כניסה</button>
+  </div>
+  <button class="btn btn-ghost" onclick="go('s-home')">← חזרה</button>
+</div>
+
+<!-- CREATE -->
+<div class="screen" id="s-create">
+  <div class="logo" style="font-size:2rem">✨ פתיחת חדר</div>
+  <div class="card">
+    <div class="lbl">השם שלך (מנחה)</div>
+    <input class="inp" id="hname" placeholder="למשל: שני" maxlength="15"/>
+    <div class="lbl">שם יום ההולדת 🎂</div>
+    <input class="inp" id="bname" placeholder="למשל: מיה" maxlength="15"/>
+    <div class="lbl">בחר/י אימוג'י 👇</div>
+    <div class="emoji-grid" id="host-emoji-picker"></div>
+    <button class="btn btn-pink" onclick="createRoom()">🎉 צור חדר</button>
+  </div>
+  <button class="btn btn-ghost" onclick="go('s-home')">← חזרה</button>
+</div>
+
+<!-- HOST LOBBY -->
+<div class="screen" id="s-hlobby">
+  <div class="logo" style="font-size:1.9rem">🎊 ממתינים לשחקנים</div>
+  <div class="card">
+    <div class="lbl">שתפו את הקוד!</div>
+    <div class="room-code" id="show-code">----</div>
+    <div class="lbl" style="margin-top:8px;text-align:center">מחוברים: <span id="pcnt">0</span> שחקנים</div>
+    <div class="pgrid" id="hplayers"></div>
+  </div>
+  <button class="btn btn-mint" id="startbtn" onclick="startGame()" disabled>
+    🟢 התחל משחק (<span id="scnt">0</span>/2 מינימום)
+  </button>
+</div>
+
+<!-- PLAYER LOBBY -->
+<div class="screen" id="s-plobby">
+  <div class="bemoji">🥳</div>
+  <h2>הצטרפת!</h2>
+  <p class="pcenter" id="lmsg">ממתין שהמנחה יתחיל...</p>
+  <div class="dots"><span></span><span></span><span></span></div>
+</div>
+
+<!-- HOST QUESTION -->
+<div class="screen" id="s-qhost">
+  <div style="font-size:0.82rem;color:var(--muted);text-align:center;margin-bottom:6px" id="qhbadge"></div>
+  <div class="ttag" id="qhtag"></div>
+  <div class="timer-wrap">
+    <svg width="70" height="70">
+      <circle cx="35" cy="35" r="29" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>
+      <circle id="tc-h" cx="35" cy="35" r="29" fill="none" stroke="#FFD93D" stroke-width="5" stroke-dasharray="182.2" stroke-dashoffset="0" stroke-linecap="round"/>
+    </svg>
+    <div class="tnum" id="tn-h">35</div>
+  </div>
+  <div class="prog-wrap"><div class="prog-fill" id="ph" style="width:0%"></div></div>
+  <div class="qbox" id="qhtext"></div>
+  <div class="wlbl" id="wlbl">ממתין לתשובות...</div>
+  <div id="haans" style="width:100%;max-width:420px;margin-bottom:10px"></div>
+  <button class="btn btn-yellow" id="nextbtn" style="display:none" onclick="hostReveal()">הצג תוצאות ←</button>
+</div>
+
+<!-- PLAYER QUESTION -->
+<div class="screen" id="s-qplayer">
+  <div style="font-size:0.82rem;color:var(--muted);text-align:center;margin-bottom:6px" id="qpbadge"></div>
+  <div class="ttag" id="qptag"></div>
+  <div class="timer-wrap">
+    <svg width="70" height="70">
+      <circle cx="35" cy="35" r="29" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>
+      <circle id="tc-p" cx="35" cy="35" r="29" fill="none" stroke="#FFD93D" stroke-width="5" stroke-dasharray="182.2" stroke-dashoffset="0" stroke-linecap="round"/>
+    </svg>
+    <div class="tnum" id="tn-p">35</div>
+  </div>
+  <div class="prog-wrap"><div class="prog-fill" id="pp" style="width:0%"></div></div>
+  <div class="qbox" id="qptext"></div>
+  <div id="paans"></div>
+  <div class="sok" id="sok" style="display:none">✅ תשובה נשלחה! ממתין לשאר...</div>
+</div>
+
+<!-- REVEAL -->
+<div class="screen" id="s-reveal">
+  <h2 id="rvtitle">התשובות! 👀</h2>
+  <p class="pcenter" id="rvq"></p>
+  <p class="stip" id="rvtip"></p>
+  <div id="rvcards" style="width:100%;max-width:420px"></div>
+  <button class="btn btn-pink" style="margin-top:10px" id="rvbtn" onclick="hostGoLB()">המשך ←</button>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="screen" id="s-lb">
+  <h2>🏆 ניקוד</h2>
+  <p class="pcenter" id="lbsub"></p>
+  <div class="slist" id="lblist"></div>
+  <button class="btn btn-purple" style="margin-top:14px" id="lbbtn" onclick="hostNextQ()">המשך ←</button>
+</div>
+
+<!-- FINAL -->
+<div class="screen" id="s-final">
+  <div style="font-size:5rem;text-align:center;margin-bottom:12px">🏆</div>
+  <h2 id="ftitle">כל הכבוד!</h2>
+  <p class="pcenter" id="fmsg"></p>
+  <div class="slist" id="flist"></div>
+  <button class="btn btn-yellow" style="margin-top:18px" onclick="location.reload()">🔄 משחק חדש</button>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyAiZdYWYQkWgskRLtaCXq7b0qpAEhJI0Uc",
+  authDomain:"happybirthday-b50ab.firebaseapp.com",
+  databaseURL:"https://happybirthday-b50ab-default-rtdb.firebaseio.com",
+  projectId:"happybirthday-b50ab",
+  storageBucket:"happybirthday-b50ab.firebasestorage.app",
+  messagingSenderId:"569638202160",
+  appId:"1:569638202160:web:0603c312e99c11454b36f5"
+});
+const db=firebase.database();
+
+const EMOJIS=['🦁','🐬','🦋','🐝','🦊','🐧','🌸','⭐','🍕','🎸','🌈','🦄','🐙','🍀','🎯','🦩'];
+const COLORS=['#FF6FB7','#FFD93D','#5EFFD4','#C77DFF','#FF9F7F','#80DEEA','#F48FB1','#B39DDB'];
+const RANKS=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
+const TOTAL=14, QTIME=35;
+
+// All available emoji for picker
+const ALL_EMOJIS=[
+  '🦁','🐯','🐻','🦊','🐼','🐨','🦋','🐝','🦄','🐬',
+  '🦩','🦚','🦜','🐙','🍀','🎯','🌸','⭐','🍕','🎸',
+  '🌈','🍦','🎀','💎','🔥','👑','🎭','🚀','🌙','🎲'
+];
+
+let selectedEmoji = '⭐'; // default
+
+function buildEmojiPicker(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  ALL_EMOJIS.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'ep' + (e === selectedEmoji ? ' chosen' : '');
+    btn.textContent = e;
+    btn.onclick = () => {
+      selectedEmoji = e;
+      el.querySelectorAll('.ep').forEach(b => b.classList.remove('chosen'));
+      // sync both pickers
+      document.querySelectorAll('.ep').forEach(b => {
+        if (b.textContent === e) b.classList.add('chosen');
+        else b.classList.remove('chosen');
+      });
+    };
+    el.appendChild(btn);
+  });
+}
+
+// Build pickers on page load
+buildEmojiPicker('emoji-picker');
+buildEmojiPicker('host-emoji-picker');
+
+// 14 questions: ~3 about birthday girl, ~3 birthday themed, ~8 family/general
+const QS=[
+  // 🎉 Birthday themed (3)
+  {type:'trivia',tag:'🎉 רוח יום הולדת',q:'כמה נרות מדליקים בעוגה לגיל 14?',opts:['12','13','14','15'],answer:'14'},
+  {type:'whois',tag:'🎉 רוח יום הולדת',q:'מי הכי סביר לתת מתנה הכי מפתיעה ויצירתית?'},
+  {type:'write',tag:'🎉 רוח יום הולדת',q:'המסיבה המושלמת לגיל 14 חייבת לכלול ___'},
+  // 🎀 על יום ההולדת - חיובי ומחמיא בלבד (3)
+  {type:'whois',tag:'🎀 על יום ההולדת',q:'מי מכיר את {{name}} הכי הרבה שנים?'},
+  {type:'write',tag:'🎀 על יום ההולדת',q:'הדבר הכי מיוחד ב-{{name}} הוא ___'},
+  {type:'write',tag:'🎀 על יום ההולדת',q:'בעוד 10 שנים {{name}} תהיה ___'},
+  // 🎭 מי הכי - כייפי ולא מביך (5)
+  {type:'whois',tag:'🎭 מי הכי...',q:'מי הכי סביר להתחיל לרקוד ראשון במסיבה?'},
+  {type:'whois',tag:'🎭 מי הכי...',q:'מי הכי סביר להיות עשיר בעוד 10 שנים?'},
+  {type:'whois',tag:'🎭 מי הכי...',q:'מי הכי סביר לצחוק בזמן לא מתאים?'},
+  {type:'whois',tag:'🎭 מי הכי...',q:'מי הכי סביר לתת עצות טובות לכולם?'},
+  {type:'whois',tag:'🎭 מי הכי...',q:'מי הכי סביר להישאר אחרון בחגיגה?'},
+  // ✍️ ממלאים ריק - משפחתי (3)
+  {type:'write',tag:'✍️ ממלאים ריק',q:'אם המשפחה שלנו הייתה סדרה, היא הייתה נקראת ___'},
+  {type:'write',tag:'✍️ ממלאים ריק',q:'הביטוי שהכי שומעים במשפחה שלנו הוא ___'},
+  {type:'write',tag:'✍️ ממלאים ריק',q:'הדבר שכולם יזכרו מהחגיגה של היום הוא ___'},
+];
+
+let S={
+  code:null,isHost:false,myName:'',myColor:'',myEmoji:'',bday:'',
+  round:0,myAns:null,timer:null,timeLeft:QTIME,usedQ:[],ls:[],lastPhase:null
+};
+
+const ref=p=>db.ref(`rooms/${S.code}/${p}`);
+const go=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);};
+const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3000);};
+const fmtQ=q=>({...q,q:q.q.replace(/{{name}}/g,S.bday)});
+const addL=(r,e,c)=>{r.on(e,c);S.ls.push({r,e,c});};
+const clearL=()=>{S.ls.forEach(({r,e,c})=>r.off(e,c));S.ls=[];};
+const tagStyle=t=>({whois:'background:rgba(255,111,183,0.2);color:#FF6FB7',write:'background:rgba(94,255,212,0.2);color:#5EFFD4',trivia:'background:rgba(199,125,255,0.2);color:#C77DFF'}[t]||'');
+
+// Sparkles
+(()=>{const w=document.getElementById('spWrap'),cols=['#FF6FB7','#FFD93D','#C77DFF','#5EFFD4'];for(let i=0;i<25;i++){const s=document.createElement('div');s.className='sp';s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;background:${cols[~~(Math.random()*4)]};animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*2}s`;w.appendChild(s);}})();
+
+function startTimer(sec,side,onEnd){
+  stopTimer();S.timeLeft=sec;
+  const num=document.getElementById(`tn-${side}`),circ=document.getElementById(`tc-${side}`),C=182.2;
+  S.timer=setInterval(()=>{
+    S.timeLeft--;
+    if(num)num.textContent=S.timeLeft;
+    if(circ){circ.style.strokeDashoffset=C*(1-S.timeLeft/sec);if(S.timeLeft<=7)circ.style.stroke='#FF6FB7';}
+    if(S.timeLeft<=0){stopTimer();if(onEnd)onEnd();}
+  },1000);
+}
+function stopTimer(){if(S.timer){clearInterval(S.timer);S.timer=null;}}
+
+async function createRoom(){
+  const hn=document.getElementById('hname').value.trim(),bn=document.getElementById('bname').value.trim();
+  if(!hn||!bn){toast('אנא מלאי שם ושם יום הולדת');return;}
+  const code=String(Math.floor(1000+Math.random()*9000));
+  S.code=code;S.isHost=true;S.myName=hn;S.bday=bn;S.myColor=COLORS[0];S.myEmoji=selectedEmoji;
+  await db.ref(`rooms/${code}`).set({
+    meta:{bday:bn,phase:'lobby',round:0,total:TOTAL},
+    scores:{[hn]:0},
+    players:{[hn]:{name:hn,color:COLORS[0],emoji:selectedEmoji,isHost:true,at:Date.now()}}
+  });
+  document.getElementById('show-code').textContent=code;
+  go('s-hlobby');listenLobby();
+}
+
+async function joinRoom(){
+  const code=document.getElementById('jcode').value.trim(),name=document.getElementById('jname').value.trim();
+  if(!code||code.length!==4||!name){toast('קוד לא תקין או שם חסר');return;}
+  const snap=await db.ref(`rooms/${code}/meta`).once('value');
+  if(!snap.exists()){toast('חדר לא נמצא! בדקי את הקוד');return;}
+  const m=snap.val();
+  if(m.phase!=='lobby'){toast('המשחק כבר התחיל');return;}
+  S.code=code;S.isHost=false;S.myName=name;S.bday=m.bday;
+  const ps=await db.ref(`rooms/${code}/players`).once('value');
+  const idx=ps.exists()?Object.keys(ps.val()).length:0;
+  S.myColor=COLORS[idx%COLORS.length];S.myEmoji=selectedEmoji;
+  await db.ref(`rooms/${code}/players/${name}`).set({name,color:S.myColor,emoji:selectedEmoji,isHost:false,at:Date.now()});
+  await db.ref(`rooms/${code}/scores/${name}`).set(0);
+  document.getElementById('lmsg').textContent=`היי ${name}! ממתין שהמנחה יתחיל... 🎉`;
+  go('s-plobby');listenPhase();
+}
+
+function listenLobby(){
+  addL(ref('players'),'value',snap=>{
+    const ps=snap.exists()?Object.values(snap.val()):[];
+    renderChips(ps,'hplayers');
+    document.getElementById('pcnt').textContent=ps.length;
+    document.getElementById('scnt').textContent=ps.length;
+    document.getElementById('startbtn').disabled=ps.length<2;
+  });
+}
+
+function renderChips(players,cid){
+  const el=document.getElementById(cid);if(!el)return;
+  el.innerHTML='';
+  players.sort((a,b)=>a.at-b.at).forEach(p=>{
+    const c=document.createElement('div');c.className='chip';
+    c.innerHTML=`<div class="av" style="background:${p.color}22;border:2px solid ${p.color}">${p.emoji}</div><span>${p.name}</span>`;
+    el.appendChild(c);
+  });
+}
+
+function listenPhase(){
+  addL(ref('meta'),'value',snap=>{
+    if(!snap.exists())return;
+    const m=snap.val();
+    if(m.phase==='question'&&m.round===S.round)return;
+    if(m.phase===S.lastPhase&&m.phase!=='question')return;
+    S.lastPhase=m.phase;
+    if(m.phase==='question'){S.round=m.round;loadPlayerQ();}
+    else if(m.phase==='reveal'){showReveal(false);}
+    else if(m.phase==='leaderboard'){showLB(false);}
+    else if(m.phase==='final'){showFinal();}
+  });
+}
+
+async function startGame(){clearL();S.usedQ=[];S.round=0;await pushQ();}
+
+async function pushQ(){
+  S.round++;
+  if(S.round>TOTAL){endGame();return;}
+  const avail=QS.filter((_,i)=>!S.usedQ.includes(i));
+  const idx=Math.floor(Math.random()*avail.length);
+  const raw=avail[idx];
+  S.usedQ.push(QS.indexOf(raw));
+  const q=fmtQ(raw);
+  await ref('currentQ').set({...q,round:S.round});
+  await ref('answers').remove();
+  await ref('meta').update({phase:'question',round:S.round});
+  renderHostQ(q);
+}
+
+function renderHostQ(q){
+  go('s-qhost');
+  document.getElementById('qhbadge').textContent=`סיבוב ${S.round} מתוך ${TOTAL}`;
+  const tag=document.getElementById('qhtag');tag.textContent=q.tag;tag.style.cssText=tagStyle(q.type);
+  document.getElementById('qhtext').textContent=q.q;
+  document.getElementById('ph').style.width=((S.round-1)/TOTAL*100)+'%';
+  document.getElementById('nextbtn').style.display='none';
+  document.getElementById('wlbl').textContent='ממתין לתשובות...';
+  S.myAns=null;
+  renderHostAns(q);
+  startTimer(QTIME,'h',()=>{document.getElementById('nextbtn').style.display='flex';});
+  addL(ref('answers'),'value',snap=>{
+    const ans=snap.exists()?snap.val():{};
+    const cnt=Object.keys(ans).length;
+    ref('players').once('value').then(ps=>{
+      const tot=ps.exists()?Object.keys(ps.val()).length:0;
+      document.getElementById('wlbl').textContent=`${cnt} / ${tot} ענו`;
+      if(cnt>=tot&&tot>0){stopTimer();document.getElementById('nextbtn').style.display='flex';}
+    });
+  });
+}
+
+async function renderHostAns(q){
+  const area=document.getElementById('haans');area.innerHTML='';
+  if(q.type==='trivia'){
+    const g=document.createElement('div');g.className='agrid';
+    q.opts.forEach(o=>{const b=document.createElement('button');b.className='abtn';b.textContent=o;b.onclick=()=>hostAns(o,g);g.appendChild(b);});
+    area.appendChild(g);
+  } else if(q.type==='whois'){
+    const ps=await ref('players').once('value');
+    const players=ps.exists()?Object.values(ps.val()):[];
+    const g=document.createElement('div');g.className='agrid';
+    players.sort((a,b)=>a.at-b.at).forEach(p=>{const b=document.createElement('button');b.className='abtn';b.innerHTML=`${p.emoji} ${p.name}`;b.onclick=()=>hostAns(p.name,g);g.appendChild(b);});
+    area.appendChild(g);
+  } else {
+    const ta=document.createElement('textarea');ta.className='winp';ta.placeholder='כתב/י תשובה...';ta.maxLength=80;area.appendChild(ta);
+    const sb=document.createElement('button');sb.className='btn btn-pink';sb.textContent='📨 שלח';sb.onclick=()=>{if(ta.value.trim())hostAns(ta.value.trim(),null);};area.appendChild(sb);
+  }
+}
+
+async function hostAns(ans,grid){
+  if(S.myAns)return;S.myAns=ans;
+  if(grid){grid.querySelectorAll('.abtn').forEach(b=>{b.disabled=true;if(b.textContent===ans||b.innerHTML.includes(ans))b.classList.add('picked');});}
+  document.getElementById('haans').style.opacity='0.5';
+  await ref(`answers/${S.myName}`).set(ans);
+}
+
+async function loadPlayerQ(){
+  const snap=await ref('currentQ').once('value');if(!snap.exists())return;
+  const q=snap.val();S.myAns=null;
+  go('s-qplayer');
+  document.getElementById('qpbadge').textContent=`סיבוב ${S.round} מתוך ${TOTAL}`;
+  const tag=document.getElementById('qptag');tag.textContent=q.tag;tag.style.cssText=tagStyle(q.type);
+  document.getElementById('qptext').textContent=q.q;
+  document.getElementById('pp').style.width=((S.round-1)/TOTAL*100)+'%';
+  document.getElementById('sok').style.display='none';
+  const area=document.getElementById('paans');area.innerHTML='';
+  if(q.type==='trivia'){
+    const g=document.createElement('div');g.className='agrid';
+    q.opts.forEach(o=>{const b=document.createElement('button');b.className='abtn';b.textContent=o;b.onclick=()=>playerAns(o,g);g.appendChild(b);});
+    area.appendChild(g);
+  } else if(q.type==='whois'){
+    const ps=await ref('players').once('value');
+    const players=ps.exists()?Object.values(ps.val()):[];
+    const g=document.createElement('div');g.className='agrid';
+    players.sort((a,b)=>a.at-b.at).forEach(p=>{const b=document.createElement('button');b.className='abtn';b.innerHTML=`${p.emoji} ${p.name}`;b.onclick=()=>playerAns(p.name,g);g.appendChild(b);});
+    area.appendChild(g);
+  } else {
+    const ta=document.createElement('textarea');ta.className='winp';ta.placeholder='כתב/י תשובה מצחיקה... 😄';ta.maxLength=80;area.appendChild(ta);
+    const sb=document.createElement('button');sb.className='btn btn-pink';sb.textContent='📨 שלח';sb.onclick=()=>{if(ta.value.trim())playerAns(ta.value.trim(),null);};area.appendChild(sb);
+  }
+  startTimer(QTIME,'p',()=>{if(!S.myAns)playerAns('לא ענה/תה 😅',null);});
+}
+
+async function playerAns(ans,grid){
+  if(S.myAns)return;S.myAns=ans;stopTimer();
+  if(grid){grid.querySelectorAll('.abtn').forEach(b=>{b.disabled=true;if(b.textContent===ans||b.innerHTML.includes(ans))b.classList.add('picked');});}
+  document.getElementById('paans').style.opacity='0.5';
+  document.getElementById('sok').style.display='block';
+  await ref(`answers/${S.myName}`).set(ans);
+}
+
+async function hostReveal(){
+  stopTimer();clearL();
+  const[qS,aS,scS]=await Promise.all([ref('currentQ').once('value'),ref('answers').once('value'),ref('scores').once('value')]);
+  const q=qS.val(),ans=aS.exists()?aS.val():{},scores=scS.exists()?scS.val():{};
+  if(q.type==='trivia'&&q.answer){
+    Object.entries(ans).forEach(([n,a])=>{if(a===q.answer)scores[n]=(scores[n]||0)+100;});
+  } else if(q.type==='whois'){
+    const votes={};Object.values(ans).forEach(v=>{votes[v]=(votes[v]||0)+1;});
+    const max=Math.max(...Object.values(votes),0);
+    if(max>=2)Object.entries(votes).filter(([,c])=>c===max).forEach(([n])=>{scores[n]=(scores[n]||0)+150;});
+  } else if(q.type==='write'){
+    Object.entries(ans).forEach(([n,a])=>{if(a&&a!=='לא ענה/תה 😅')scores[n]=(scores[n]||0)+50;});
+  }
+  await ref('scores').set(scores);
+  await ref('meta').update({phase:'reveal'});
+  showReveal(true);
+}
+
+async function showReveal(isHost){
+  go('s-reveal');
+  const[qS,aS,pS]=await Promise.all([ref('currentQ').once('value'),ref('answers').once('value'),ref('players').once('value')]);
+  const q=qS.val(),ans=aS.exists()?aS.val():{},players=pS.exists()?Object.values(pS.val()):[];
+  document.getElementById('rvtitle').textContent='התשובות! 👀';
+  document.getElementById('rvq').textContent=q.q;
+  document.getElementById('rvbtn').style.display=isHost?'flex':'none';
+  const tips={whois:'🏆 מי שמצביעים עליו הכי הרבה מקבל 150 נקודות!',write:'🏆 כל מי שענה מקבל 50 נקודות השתתפות!',trivia:'🏆 תשובה נכונה = 100 נקודות!'};
+  document.getElementById('rvtip').textContent=tips[q.type]||'';
+  const cont=document.getElementById('rvcards');cont.innerHTML='';
+  if(q.type==='whois'){
+    const votes={};players.forEach(p=>{votes[p.name]=0;});
+    Object.values(ans).forEach(v=>{votes[v]=(votes[v]||0)+1;});
+    Object.entries(votes).sort((a,b)=>b[1]-a[1]).forEach(([name,cnt],i)=>{
+      const p=players.find(p=>p.name===name);
+      addCard(cont,`${p?p.emoji:'👤'} ${name}`,`${cnt} קולות ${'⭐'.repeat(Math.min(cnt,5))}`,i);
+    });
+  } else {
+    Object.entries(ans).forEach(([name,a],i)=>{
+      const p=players.find(p=>p.name===name);
+      addCard(cont,`"${a}"`,`${p?p.emoji:'👤'} ${name}`,i);
+    });
+  }
+  if(!isHost)listenPhase();
+}
+
+function addCard(c,main,sub,d){
+  const el=document.createElement('div');el.className='rcard';el.style.animationDelay=`${d*0.1}s`;
+  el.innerHTML=`<div class="rmain">${main}</div><div class="rsub">${sub}</div>`;
+  c.appendChild(el);
+}
+
+async function hostGoLB(){await ref('meta').update({phase:'leaderboard'});showLB(true);}
+
+async function showLB(isHost){
+  go('s-lb');
+  const[scS,pS]=await Promise.all([ref('scores').once('value'),ref('players').once('value')]);
+  const scores=scS.exists()?scS.val():{},players=pS.exists()?Object.values(pS.val()):[];
+  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  const isLast=S.round>=TOTAL;
+  document.getElementById('lbsub').textContent=isLast?'תוצאות סופיות! 🎉':`אחרי סיבוב ${S.round} מתוך ${TOTAL}`;
+  const list=document.getElementById('lblist');list.innerHTML='';
+  sorted.forEach(([name,pts],i)=>{
+    const p=players.find(p=>p.name===name);
+    const row=document.createElement('div');row.className='srow';row.style.animationDelay=`${i*0.1}s`;
+    row.innerHTML=`<span class="srank">${RANKS[i]||'•'}</span><span style="font-size:1.1rem;margin-left:8px">${p?p.emoji:'👤'}</span><span class="sname">${name}</span><span class="spts">${pts}</span>`;
+    list.appendChild(row);
+  });
+  const btn=document.getElementById('lbbtn');
+  btn.style.display=isHost?'flex':'none';
+  btn.textContent=isLast?'🎉 ראה תוצאות סופיות':'סיבוב הבא! →';
+  if(!isHost)listenPhase();
+}
+
+async function hostNextQ(){if(S.round>=TOTAL){endGame();return;}clearL();await pushQ();}
+
+async function endGame(){await ref('meta').update({phase:'final'});showFinal();}
+
+async function showFinal(){
+  go('s-final');launchConfetti();
+  const[scS,pS,mS]=await Promise.all([ref('scores').once('value'),ref('players').once('value'),ref('meta').once('value')]);
+  const scores=scS.exists()?scS.val():{},players=pS.exists()?Object.values(pS.val()):[];
+  const bn=mS.exists()?mS.val().bday:'';
+  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  const winner=sorted[0];
+  document.getElementById('ftitle').textContent=`🎉 ${winner?winner[0]:'כולם'} ניצח/ה!`;
+  document.getElementById('fmsg').textContent=`יום הולדת שמח ${bn}! 🎂 תודה ששיחקתם ביחד!`;
+  const list=document.getElementById('flist');list.innerHTML='';
+  sorted.forEach(([name,pts],i)=>{
+    const p=players.find(p=>p.name===name);
+    const row=document.createElement('div');row.className='srow';row.style.animationDelay=`${i*0.12}s`;
+    row.innerHTML=`<span class="srank">${RANKS[i]||'•'}</span><span style="font-size:1.1rem;margin-left:8px">${p?p.emoji:'👤'}</span><span class="sname">${name}</span><span class="spts">${pts}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function launchConfetti(){
+  const w=document.getElementById('cfWrap');w.innerHTML='';
+  const cols=['#FF6FB7','#FFD93D','#C77DFF','#5EFFD4','#FF9F7F','#80DEEA'];
+  for(let i=0;i<80;i++){
+    const p=document.createElement('div');p.className='cp';
+    const sz=6+Math.random()*9;
+    p.style.cssText=`left:${Math.random()*100}%;background:${cols[~~(Math.random()*cols.length)]};width:${sz}px;height:${sz}px;animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*2}s;border-radius:${Math.random()>.5?'50%':'3px'}`;
+    w.appendChild(p);
+  }
+  setTimeout(()=>w.innerHTML='',7000);
+}
+</script>
+</body>
+</html>
